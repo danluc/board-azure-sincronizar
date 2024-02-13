@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>netcoreapp2.2</TargetFramework>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="MediatR" Version="8.0.1" />
+		<PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.11.1" />
+		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.11.1" />
+		<PackageReference Include="Enums.NET" Version="4.0.0" />
+		<PackageReference Include="CryptSharpOfficial" Version="2.1.0" />
+		<PackageReference Include="Z.EntityFramework.Plus.EFCore" Version="2.102.0" />
+		<PackageReference Include="Serilog.AspNetCore" Version="2.1.1" />
+		<PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
+		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.11.1" />
+		<PackageReference Include="Serilog.Extensions.Logging.File" Version="2.0.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Back.Data\Back.Data.csproj" />
+		<ProjectReference Include="..\Back.Dominio\Back.Dominio.csproj" />
+	</ItemGroup>
+
+</Project>

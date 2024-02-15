@@ -1,1 +1,23 @@
 /* You can add global styles to this file, and also import other style files */
+.toast-error {
+  background-color: #cb5f55 !important;
+  text-align: center !important;
+  font-weight: 500 !important;
+}
+
+.toast-warning {
+  background-color: #faa922 !important;
+  text-align: center !important;
+  font-weight: 500 !important;
+}
+
+.toast-success {
+  background-color: #54a254 !important;
+  text-align: center !important;
+  font-weight: 500 !important;
+}
+
+.toast-info {
+  text-align: center !important;
+  font-weight: 500 !important;
+}

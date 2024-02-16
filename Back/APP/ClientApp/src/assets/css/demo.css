@@ -15,6 +15,11 @@
 * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 */
+
+.bg-laranja-evertec {
+  background: #FF6C0C!important;
+}
+
 .tim-typo{
   padding-left: 25%;
   margin-bottom: 40px;

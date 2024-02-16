@@ -10,6 +10,8 @@ import { AdminLayoutComponent } from './layouts/admin-layout/admin-layout.compon
 import { ContasComponent } from './contas/contas.component';
 import { ConfiguracoesComponent } from './configuracoes/configuracoes.component';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatInputModule } from '@angular/material/input';
+import { NgxMaskModule } from 'ngx-mask';
 
 @NgModule({
   imports: [
@@ -20,13 +22,15 @@ import { MatSnackBarModule } from '@angular/material/snack-bar';
     ComponentsModule,
     RouterModule,
     AppRoutingModule,
-    MatSnackBarModule
+    MatSnackBarModule,
+    MatInputModule,
+    NgxMaskModule.forRoot(),
   ],
   declarations: [		
     AppComponent,
     AdminLayoutComponent,
-      ContasComponent,
-      ConfiguracoesComponent
+    ContasComponent,
+    ConfiguracoesComponent
    ],
   providers: [],
   bootstrap: [AppComponent]

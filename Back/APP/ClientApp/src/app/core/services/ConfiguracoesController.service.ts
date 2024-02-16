@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { BaseControllerService } from './base-contrller.service';
 import { Conta } from '../models/conta';
+import { Configuracao } from '../models/configuracao';
 
 @Injectable({
     providedIn: 'root',
@@ -14,15 +15,15 @@ export class ConfiguracoesControllerService extends BaseControllerService {
         super(_http);
     }
 
-    public lista(): Observable<Conta[]> {
-        return this.get<Conta[]>(`Configuracoes`);
+    public lista(): Observable<any> {
+        return this.get<any>(`Configuracoes`);
     }
 
-    public cadastrar(dados: Conta[]): Observable<any> {
+    public cadastrar(dados: Configuracao[]): Observable<any> {
         return this.post(`Configuracoes`, dados);
     }
 
-    public atualizar(dados: Conta[]): Observable<any> {
+    public atualizar(dados: Configuracao[]): Observable<any> {
         return this.put(`Configuracoes`, dados);
     }
 }

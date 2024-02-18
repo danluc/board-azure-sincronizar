@@ -1,4 +1,5 @@
-﻿using Back.Servico.Consultas.Projetos.ListarProjetos;
+﻿using Back.Dominio.DTO.Projetos;
+using Back.Servico.Consultas.Projetos.ListarProjetos;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
@@ -15,10 +16,10 @@ namespace APP.Controllers
             _mediator = mediator;
         }
 
-        [HttpGet("")]
-        public async Task<ActionResult> Get()
+        [HttpPost("")]
+        public async Task<ActionResult> Post(BuscarProjetoDTO dados)
         {
-            var result = await _mediator.Send(new ParametroListarProjetos());
+            var result = await _mediator.Send(new ParametroListarProjetos(dados.Url, dados.Token));
             if (!result.Sucesso)
                 return BadRequest(result.Mensagem);
 

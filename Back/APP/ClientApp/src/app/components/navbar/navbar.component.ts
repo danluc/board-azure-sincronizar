@@ -114,12 +114,15 @@ export class NavbarComponent implements OnInit {
       if(titlee.charAt(0) === '#'){
           titlee = titlee.slice( 1 );
       }
-
-      for(var item = 0; item < this.listTitles.length; item++){
-          if(this.listTitles[item].path === titlee){
-              return this.listTitles[item].title;
-          }
-      }
-      return 'Dashboard';
+      var title = 'Dashboard';
+      var titulo = titlee.split("/");
+      titulo.forEach(element => {
+        var item = `/${element}`;
+        var menu = this.listTitles.find(e => e.path == item);
+        if(menu){
+          title = menu.title;
+        }
+      });
+      return title;
     }
 }

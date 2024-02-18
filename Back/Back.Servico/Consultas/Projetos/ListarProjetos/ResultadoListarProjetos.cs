@@ -17,7 +17,6 @@ namespace Back.Servico.Consultas.Projetos.ListarProjetos
             Mensagem = msg;
         }
 
-        public List<TeamProjectReference> ProjetosPrincipal { get; set; }
-        public List<TeamProjectReference> ProjetosSecundario { get; set; }
+        public List<TeamProjectReference> Projetos { get; set; }
     }
 }

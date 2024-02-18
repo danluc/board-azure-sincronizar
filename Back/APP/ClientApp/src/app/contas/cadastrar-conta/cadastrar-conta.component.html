@@ -1,3 +1,116 @@
-<p>
-  cadastrar-conta works!
-</p>
+<div class="main-content">
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-md-12">
+        <div class="card">
+          <div class="card-header card-header-danger bg-laranja-evertec">
+            <h4 class="card-title">Configurar contas</h4>
+            <p class="card-category"></p>
+          </div>
+          <div class="card-body mt-3">
+            <form [formGroup]="form">
+              <div class="row">
+                <div class="col-md-12">
+                  <label>Conta principal, conta de onde os itens vão ser copiados.</label>
+                  <div class="row mt-3">
+                    <div class="col-md-4">
+                      <mat-form-field class="example-full-width">
+                        <input
+                          matInput
+                          formControlName="urlPrincipal"
+                          autocomplete="off"
+                          placeholder="URL Corporação Azure"
+                          (blur)="this.buscarProjetos()"
+                        />
+                        <mat-hint>https://dev.azure.com/NOMEEMPRESA</mat-hint>
+                      </mat-form-field>
+                    </div>
+                    <div class="col-md-4">
+                      <mat-form-field class="example-full-width">
+                        <input matInput formControlName="tokenPrincipal" autocomplete="off" placeholder="Token" (blur)="this.buscarProjetos()" />
+                        <mat-hint>Personal Access Tokens</mat-hint>
+                      </mat-form-field>
+                    </div>
+                    <div class="col-md-4">
+                      <mat-form-field class="example-full-width">
+                        <mat-select formControlName="projetoPrincipal" placeholder="Projeto">
+                          <mat-option *ngFor="let item of this.projetosPrincipal" [value]="item">{{ item.name }}</mat-option>
+                        </mat-select>
+                      </mat-form-field>
+                    </div>
+                  </div>
+                  <hr />
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-12">
+                  <label>Conta secundaria, para onde os itens vão ser enviados.</label>
+                  <div class="row mt-3">
+                    <div class="col-md-4">
+                      <mat-form-field class="example-full-width">
+                        <input
+                          matInput
+                          formControlName="urlSecundario"
+                          autocomplete="off"
+                          placeholder="URL Corporação Azure"
+                          (blur)="this.buscarProjetos(false)"
+                        />
+                        <mat-hint>https://dev.azure.com/NOMEEMPRESA</mat-hint>
+                      </mat-form-field>
+                    </div>
+                    <div class="col-md-4">
+                      <mat-form-field class="example-full-width">
+                        <input
+                          matInput
+                          formControlName="tokenSecundario"
+                          autocomplete="off"
+                          placeholder="Token"
+                          (blur)="this.buscarProjetos(false)"
+                        />
+                        <mat-hint>Personal Access Tokens</mat-hint>
+                      </mat-form-field>
+                    </div>
+                    <div class="col-md-4">
+                      <mat-form-field class="example-full-width">
+                        <input matInput formControlName="nomeSecundario" autocomplete="off" placeholder="Nome usuário" />
+                        <mat-hint>Nome do usuário no Azure</mat-hint>
+                      </mat-form-field>
+                    </div>
+                    <div class="col-md-4">
+                      <mat-form-field class="example-full-width">
+                        <mat-select formControlName="projetoSecundario" placeholder="Projeto" (selectionChange)="buscarTimes()">
+                          <mat-option *ngFor="let item of this.projetosSecundario" [value]="item">{{ item.name }}</mat-option>
+                        </mat-select>
+                      </mat-form-field>
+                    </div>
+                    <div class="col-md-4">
+                      <mat-form-field class="example-full-width">
+                        <mat-select formControlName="time" placeholder="Time" (selectionChange)="buscarAreas()">
+                          <mat-option *ngFor="let item of this.times" [value]="item">{{ item.name }}</mat-option>
+                        </mat-select>
+                      </mat-form-field>
+                    </div>
+                    <div class="col-md-4">
+                      <mat-form-field class="example-full-width">
+                        <mat-select formControlName="areaPath" placeholder="Area">
+                          <mat-option *ngFor="let item of this.areas" [value]="item">{{ item.name }}</mat-option>
+                        </mat-select>
+                      </mat-form-field>
+                    </div>
+                  </div>
+                  <hr />
+                </div>
+              </div>
+
+              <button mat-raised-button class="btn btn-danger bg-laranja-evertec pull-right mt-5" [disabled]="this.form.invalid || this.carregando">
+                {{ this.carregando ? this.textoCarregando : "Salvar" }}
+              </button>
+              <div class="clearfix"></div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

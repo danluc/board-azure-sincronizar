@@ -12,9 +12,8 @@ namespace Back.Data.Migrations
                 {
                     Id = table.Column<int>(type: "Integer", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    Dia = table.Column<int>(type: "Int", nullable: false, defaultValue: 1)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    HoraCron = table.Column<string>(maxLength: 10, nullable: false, defaultValue: "11:30")
+                    Dia = table.Column<int>(type: "Int", nullable: false),
+                    HoraCron = table.Column<string>(maxLength: 10, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -28,11 +27,12 @@ namespace Back.Data.Migrations
                     Id = table.Column<int>(type: "Integer", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
                     Token = table.Column<string>(maxLength: 255, nullable: false),
-                    NomeUsuario = table.Column<string>(maxLength: 255, nullable: false),
+                    NomeUsuario = table.Column<string>(maxLength: 255, nullable: true),
                     UrlCorporacao = table.Column<string>(maxLength: 255, nullable: false),
-                    NomeProjeto = table.Column<string>(maxLength: 255, nullable: true),
-                    TimeId = table.Column<string>(maxLength: 255, nullable: true),
+                    ProjetoNome = table.Column<string>(maxLength: 255, nullable: true),
                     ProjetoId = table.Column<string>(maxLength: 255, nullable: true),
+                    TimeNome = table.Column<string>(maxLength: 255, nullable: true),
+                    TimeId = table.Column<string>(maxLength: 255, nullable: true),
                     AreaPath = table.Column<string>(nullable: true),
                     Principal = table.Column<bool>(type: "Bit", nullable: false)
                 },

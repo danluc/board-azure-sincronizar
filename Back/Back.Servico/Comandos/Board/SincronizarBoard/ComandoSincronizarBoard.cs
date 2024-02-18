@@ -102,8 +102,8 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
             Wiql query = new Wiql()
             {
                 Query = $@"SELECT [System.Id], [System.Title]  FROM WorkItems
-                                WHERE [System.AssignedTo] EVER '{_contaPrincipal.NomeUsuario}'
-                                AND [System.TeamProject] = '{_contaPrincipal.NomeProjeto}'
+                                WHERE [System.AssignedTo] EVER @Me
+                                AND [System.TeamProject] = '{_contaPrincipal.ProjetoNome}'
                                 AND ([System.WorkItemType] = 'Task' OR [System.WorkItemType] = 'Bug')
                                 AND [System.ChangedDate] >= '{data}'"
             };
@@ -157,16 +157,16 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
 
             // Obter a lista de iterações por equipe
             TeamContext teamContext = new TeamContext(Guid.Parse(_contaSecundaria.ProjetoId), Guid.Parse(_contaSecundaria.TimeId));
-            List<TeamSettingsIteration> iterations = await workClient.GetTeamIterationsAsync(teamContext);
+            //List<TeamSettingsIteration> iterations = await workClient.GetTeamIterationsAsync(teamContext);
 
             //Pega o ultimo iteration
-            var iteration = iterations.FirstOrDefault();
+            //var iteration = iterations.FirstOrDefault();
 
-            _logger.LogInformation($"Interation destino: {iteration.Path}");
+            //_logger.LogInformation($"Interation destino: {iteration.Path}");
 
             foreach (var historia in historias)
             {
-                var resultado = await CadastrarItem(connection, historia.Historia, iteration.Path, witClient);
+                var resultado = await CadastrarItem(connection, historia.Historia, _contaSecundaria.AreaPath, witClient);
                 _logger.LogInformation($"Resultado historia: {resultado}");
 
                 //Se não cadastrou/atualizou  a historia, vamos pular para o proximo
@@ -176,7 +176,7 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
                 //Se criou, vamos cadastrar os filhos
                 foreach (var task in historia.Itens)
                 {
-                    await CadastrarItem(connection, task, iteration.Path, witClient);
+                    await CadastrarItem(connection, task, _contaSecundaria.AreaPath, witClient);
                 }
             }
         }

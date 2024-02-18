@@ -22,15 +22,11 @@ namespace Back.Data.Migrations
                         .HasColumnType("Integer");
 
                     b.Property<int>("Dia")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("Int")
-                        .HasDefaultValue(1);
+                        .HasColumnType("Int");
 
                     b.Property<string>("HoraCron")
                         .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(10)
-                        .HasDefaultValue("11:30");
+                        .HasMaxLength(10);
 
                     b.HasKey("Id");
 
@@ -45,11 +41,7 @@ namespace Back.Data.Migrations
 
                     b.Property<string>("AreaPath");
 
-                    b.Property<string>("NomeProjeto")
-                        .HasMaxLength(255);
-
                     b.Property<string>("NomeUsuario")
-                        .IsRequired()
                         .HasMaxLength(255);
 
                     b.Property<bool>("Principal")
@@ -58,7 +50,13 @@ namespace Back.Data.Migrations
                     b.Property<string>("ProjetoId")
                         .HasMaxLength(255);
 
+                    b.Property<string>("ProjetoNome")
+                        .HasMaxLength(255);
+
                     b.Property<string>("TimeId")
+                        .HasMaxLength(255);
+
+                    b.Property<string>("TimeNome")
                         .HasMaxLength(255);
 
                     b.Property<string>("Token")

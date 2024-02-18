@@ -12,7 +12,16 @@
               <div class="row">
                 <div class="col-md-6">
                   <mat-form-field class="example-full-width">
-                    <input matInput min="1" minlength="1" formControlName="dia" autocomplete="off" type="number" placeholder="Dia(s) para buscar itens" />
+                    <input
+                      matInput
+                      min="1"
+                      minlength="1"
+                      formControlName="dia"
+                      autocomplete="off"
+                      type="number"
+                      placeholder="Dia(s) para buscar itens"
+                    />
+                    <mat-hint>Buscar itens a parti da data atual menos {{this.form.get('dia').value}} dia(s)</mat-hint>
                   </mat-form-field>
                 </div>
                 <div class="col-md-6">

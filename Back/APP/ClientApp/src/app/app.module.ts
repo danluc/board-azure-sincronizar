@@ -15,6 +15,7 @@ import { NgxMaskModule } from "ngx-mask";
 import { MatSelectModule } from "@angular/material/select";
 import { CadastrarContaComponent } from "./contas/cadastrar-conta/cadastrar-conta.component";
 import { MatFormFieldModule } from "@angular/material/form-field";
+import { PipesModule } from "./core/pipe/pipes.module";
 
 @NgModule({
   imports: [
@@ -30,6 +31,7 @@ import { MatFormFieldModule } from "@angular/material/form-field";
     MatSelectModule,
     NgxMaskModule.forRoot(),
     MatFormFieldModule,
+    PipesModule
   ],
   declarations: [AppComponent, AdminLayoutComponent, ContasComponent, ConfiguracoesComponent, CadastrarContaComponent],
   providers: [],

@@ -11,7 +11,11 @@ export class SincronizarControllerService extends BaseControllerService {
     super(_http);
   }
 
-  public sincronizar(): Observable<any> {
+  public listar(): Observable<any> {
     return this.get(`Sincronizar`);
+  }
+
+  public sincronizar(): Observable<any> {
+    return this.post(`Sincronizar`, null);
   }
 }

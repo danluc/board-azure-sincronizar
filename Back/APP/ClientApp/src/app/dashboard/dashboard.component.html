@@ -10,8 +10,26 @@
           <div class="card-body mt-5">
             <div>
               <div class="row">
-                
-                
+                <div class="table-responsive" *ngIf="this.sincronizarDTO?.id">
+                  <table class="table">
+                    <thead class="text-primary">
+                      <th>#</th>
+                      <th>Data ínicio</th>
+                      <th>Status</th>
+                      <th>Data Fim</th>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>
+                          {{ this.sincronizarDTO.id }}
+                        </td>
+                        <td>{{ this.sincronizarDTO.dataInicio | date : "dd/MM/yyyy HH:mm" }}</td>
+                        <td class="text-primary">{{ this.sincronizarDTO.status | SincStatus }}</td>
+                        <td>{{ this.sincronizarDTO.dataFim | date : "dd/MM/yyyy HH:mm" }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
               </div>
 
               <button

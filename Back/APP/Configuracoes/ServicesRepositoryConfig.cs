@@ -13,6 +13,7 @@ namespace APP.Configuracoes
 
             services.AddScoped<IRepositorioConsulta<Configuracao>, RepositorioConsulta<Configuracao>>();
             services.AddScoped<IRepositorioConsulta<Conta>, RepositorioConsulta<Conta>>();
+            services.AddScoped<IRepositorioConsulta<Sincronizar>, RepositorioConsulta<Sincronizar>>();
 
             #endregion
 
@@ -20,6 +21,7 @@ namespace APP.Configuracoes
 
             services.AddScoped<IRepositorioComando<Configuracao>, RepositorioComando<Configuracao>>();
             services.AddScoped<IRepositorioComando<Conta>, RepositorioComando<Conta>>();
+            services.AddScoped<IRepositorioComando<Sincronizar>, RepositorioComando<Sincronizar>>();
 
             #endregion
 

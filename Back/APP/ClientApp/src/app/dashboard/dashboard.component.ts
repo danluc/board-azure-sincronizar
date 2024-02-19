@@ -3,6 +3,7 @@ import { Router } from "@angular/router";
 import { ContasControllerService } from "app/core/services/ContasController.service";
 import { MatSnackBar } from "@angular/material/snack-bar";
 import { SincronizarControllerService } from "app/core/services/SincronizarController.service";
+import { Sincronizar } from "app/core/models/sincronizar";
 
 @Component({
   selector: "app-dashboard",
@@ -11,6 +12,7 @@ import { SincronizarControllerService } from "app/core/services/SincronizarContr
 })
 export class DashboardComponent implements OnInit {
   public carregando: boolean = false;
+  public sincronizarDTO: Sincronizar;
   constructor(
     private _contasControllerService: ContasControllerService,
     private _sincronizarControllerService: SincronizarControllerService,
@@ -20,6 +22,7 @@ export class DashboardComponent implements OnInit {
 
   ngOnInit() {
     this._buscarContas();
+    this.listaSincronizar();
   }
 
   private _buscarContas(): void {
@@ -42,10 +45,33 @@ export class DashboardComponent implements OnInit {
     );
   }
 
+  public async listaSincronizar(): Promise<void> {
+    this.carregando = true;
+    try {
+      const res = await this._sincronizarControllerService.listar().toPromise();
+      this.carregando = false;
+      if (res.dados.length > 0) {
+        this.sincronizarDTO = res.dados[0];
+        if (this.sincronizarDTO.status == 1) {
+          this.carregando = true;
+        }
+      }
+    } catch (error) {
+      this._snackBar.open("Erro ao listar", "Fechar", {
+        duration: 3000,
+      });
+      this.carregando = false;
+    }
+  }
+
   public async sincronizar(): Promise<void> {
     this.carregando = true;
     try {
+      setTimeout(() => {
+        this.listaSincronizar();
+      }, 1000);
       const res = await this._sincronizarControllerService.sincronizar().toPromise();
+      this.listaSincronizar();
       this.carregando = false;
       this._snackBar.open("Sincronização realizada com sucesso!", "Ok", {
         duration: 4000,

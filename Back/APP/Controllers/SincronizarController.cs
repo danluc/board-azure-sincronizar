@@ -1,4 +1,5 @@
 ﻿using Back.Servico.Comandos.Board.SincronizarBoard;
+using Back.Servico.Consultas.Board.ListarSincronizacoes;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
@@ -17,6 +18,16 @@ namespace APP.Controllers
 
         [HttpGet("")]
         public async Task<ActionResult> Get()
+        {
+            var result = await _mediator.Send(new ParametroListarSincronizacoes());
+            if (!result.Sucesso)
+                return BadRequest(result.Mensagem);
+
+            return Ok(result);
+        }
+        
+        [HttpPost("")]
+        public async Task<ActionResult> Post()
         {
             var result = await _mediator.Send(new ParametroSincronizarBoard());
             if (!result.Sucesso)

@@ -1,5 +1,6 @@
 ﻿using Back.Dominio;
 using Back.Dominio.DTO.Board;
+using Back.Dominio.Enum;
 using Back.Dominio.Interfaces;
 using Back.Dominio.Models;
 using MediatR;
@@ -21,7 +22,7 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
 {
     class ComandoSincronizarBoard : IRequestHandler<ParametroSincronizarBoard, ResultadoSincronizarBoard>
     {
-        private readonly IRepositorioComando<Configuracao> _repositorioComandoConfiguracao;
+        private readonly IRepositorioComando<Sincronizar> _repositorioComandoSincronizar;
         private readonly IRepositorioConsulta<Configuracao> _repositorioConsultaConfiguracao;
         private readonly IRepositorioConsulta<Conta> _repositorioConsultaConta;
         private readonly ILogger<ComandoSincronizarBoard> _logger;
@@ -31,13 +32,13 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
         private int _areaId = 0;
 
         public ComandoSincronizarBoard(
-            IRepositorioComando<Configuracao> repositorioComandoConfiguracao,
+            IRepositorioComando<Sincronizar> repositorioComandoSincronizar,
             IRepositorioConsulta<Configuracao> repositorioConsultaConfiguracao,
             IRepositorioConsulta<Conta> repositorioConsultaConta,
             ILogger<ComandoSincronizarBoard> logger
             )
         {
-            _repositorioComandoConfiguracao = repositorioComandoConfiguracao;
+            _repositorioComandoSincronizar = repositorioComandoSincronizar;
             _repositorioConsultaConfiguracao = repositorioConsultaConfiguracao;
             _repositorioConsultaConta = repositorioConsultaConta;
             _logger = logger;
@@ -45,6 +46,8 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
 
         public async Task<ResultadoSincronizarBoard> Handle(ParametroSincronizarBoard request, CancellationToken cancellationToken)
         {
+            int sincronizarId = 0;
+            var sincronizar = new Sincronizar { DataInicio = DateTime.Now, Status = (int)EStatusSincronizar.PROCESSANDO };
             try
             {
                 //Busca as contas
@@ -52,6 +55,12 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
 
                 if (contas.Count == 0)
                     return new ResultadoSincronizarBoard("Nenhuma conta encontrada na base de dados", true);
+
+                #region REGISTRANDO_TABELA
+                var insert = await _repositorioComandoSincronizar.Insert(sincronizar);
+                await _repositorioComandoSincronizar.SaveChangesAsync();
+                sincronizarId = insert.Id;
+                #endregion
 
                 _configuracao = await _repositorioConsultaConfiguracao.Query().FirstOrDefaultAsync();
 
@@ -69,6 +78,13 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
                 //Migra as task
                 await EnviarTaskDestino(itensSincronizar);
 
+                #region ATUALIZANDO_TABELA
+                insert.DataFim = DateTime.Now;
+                insert.Status = (int)EStatusSincronizar.CONCLUIDO;
+                _repositorioComandoSincronizar.Update(insert);
+                await _repositorioComandoSincronizar.SaveChangesAsync();
+                #endregion
+
                 return new ResultadoSincronizarBoard
                 {
                     Sucesso = true
@@ -76,6 +92,16 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
             }
             catch (Exception ex)
             {
+                #region REGISTRANDO_TABELA
+                var sincronizarErro = new Sincronizar();
+                sincronizarErro.DataInicio = sincronizar.DataInicio;
+                sincronizarErro.DataFim = DateTime.Now;
+                sincronizarErro.Status = (int)EStatusSincronizar.ERRO;
+                sincronizarErro.Id = sincronizarId;
+                _repositorioComandoSincronizar.Update(sincronizarErro);
+                await _repositorioComandoSincronizar.SaveChangesAsync();
+                #endregion
+
                 return new ResultadoSincronizarBoard
                 {
                     Sucesso = false,
@@ -116,7 +142,7 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
             WorkItemQueryResult queryResult = await witClient.QueryByWiqlAsync(query, projetoId);
             IEnumerable<int> taskIds = queryResult.WorkItems.Select(wi => wi.Id);
             _logger.LogInformation($"RecuperaItensSincronizar Itens: {taskIds.Count()}");
-            // Recupera as histórias o item em si
+            // Recupera as histórias, o item em si
             foreach (int taskId in taskIds)
             {
                 var migrar = new ItensSicronizarDTO();
@@ -266,7 +292,7 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
                 {
                     Operation = operacao,
                     Path = "/fields/System.Title",
-                    Value = $"{item.Id} | {item.Fields["System.Title"]}",
+                    Value = $"{item.Id}: {item.Fields["System.Title"]}",
                 },
                 new JsonPatchOperation()
                 {
@@ -319,7 +345,7 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
 
         private async Task<WorkItem> VerificarSeItemExisteNoDestino(VssConnection connection, int id)
         {
-            Wiql query = new Wiql() { Query = $@"SELECT [System.Id], [System.Title] FROM WorkItems WHERE [System.Title] CONTAINS WORDS '{id} |'" };
+            Wiql query = new Wiql() { Query = $@"SELECT [System.Id], [System.Title] FROM WorkItems WHERE [System.Title] CONTAINS WORDS '{id}:'" };
 
             WorkItemTrackingHttpClient witClient = connection.GetClient<WorkItemTrackingHttpClient>();
 

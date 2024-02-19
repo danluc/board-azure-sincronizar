@@ -1,12 +1,14 @@
-﻿using Back.Dominio.Interfaces;
+﻿using Back.Dominio.DTO.Areas;
+using Back.Dominio.Interfaces;
 using Back.Dominio.Models;
 using MediatR;
-using Microsoft.TeamFoundation.Core.WebApi.Types;
-using Microsoft.TeamFoundation.Work.WebApi;
+using Microsoft.TeamFoundation.WorkItemTracking.WebApi;
+using Microsoft.TeamFoundation.WorkItemTracking.WebApi.Models;
 using Microsoft.VisualStudio.Services.Common;
 using Microsoft.VisualStudio.Services.WebApi;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -28,10 +30,20 @@ namespace Back.Servico.Consultas.Times.ListarIterations
                 //Conecta na Azure
                 VssConnection connection = new VssConnection(new Uri(request.Dados.Url), new VssBasicCredential(string.Empty, request.Dados.Token));
                 //Busca
-                WorkHttpClient workClient = connection.GetClient<WorkHttpClient>();
-                TeamContext teamContext = new TeamContext(request.Dados.ProjetoNome, request.Dados.TimeNome);
+                WorkItemTrackingHttpClient witClient = connection.GetClient<WorkItemTrackingHttpClient>();
 
-                List<TeamSettingsIteration> iterations = await workClient.GetTeamIterationsAsync(teamContext);
+                var iterationNodes = await witClient.GetClassificationNodeAsync(request.Dados.ProjetoNome, TreeStructureGroup.Iterations, depth: 2);
+
+                var listaInterations = iterationNodes.Children.FirstOrDefault(e => e.Name.ToUpper() == request.Dados.AreaNome.ToUpper());
+
+                var iterations = new List<AreaDTO>();
+                if (listaInterations.Children != null)
+                    iterations = listaInterations.Children.Select(e => new AreaDTO { Id = e.Identifier, Name = e.Name, Path = e.Path }).ToList();
+                else
+                {
+                    var area = new AreaDTO { Id = listaInterations.Identifier, Name = listaInterations.Name, Path = listaInterations.Path };
+                    iterations.Add(area);
+                }
 
                 return new ResultadoListarIterations
                 {

@@ -53,6 +53,9 @@ namespace Back.Data.Migrations
                     b.Property<string>("ProjetoNome")
                         .HasMaxLength(255);
 
+                    b.Property<string>("Sprint")
+                        .HasMaxLength(255);
+
                     b.Property<string>("TimeId")
                         .HasMaxLength(255);
 

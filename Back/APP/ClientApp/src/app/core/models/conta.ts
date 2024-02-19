@@ -8,5 +8,6 @@ export class Conta {
   timeId?: string;
   projetoId?: string;
   areaPath?: string;
+  sprint?: string;
   principal?: boolean;
 }

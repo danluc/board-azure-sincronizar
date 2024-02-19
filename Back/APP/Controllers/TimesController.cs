@@ -1,5 +1,6 @@
 ﻿using Back.Dominio.DTO;
 using Back.Dominio.DTO.Projetos;
+using Back.Servico.Consultas.Times.ListarAreas;
 using Back.Servico.Consultas.Times.ListarIterations;
 using Back.Servico.Consultas.Times.ListarTimes;
 using MediatR;
@@ -30,6 +31,16 @@ namespace APP.Controllers
 
         [HttpPost("BuscarAreas")]
         public async Task<ActionResult> BuscarAreas(BuscarIterationsDTO dados)
+        {
+            var result = await _mediator.Send(new ParametroListarAreas(dados));
+            if (!result.Sucesso)
+                return BadRequest(result.Mensagem);
+
+            return Ok(result);
+        }
+
+        [HttpPost("BuscarSprint")]
+        public async Task<ActionResult> BuscarSprint(BuscarIterationsDTO dados)
         {
             var result = await _mediator.Send(new ParametroListarIterations(dados));
             if (!result.Sucesso)

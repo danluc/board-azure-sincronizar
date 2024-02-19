@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Back.Data.Migrations
 {
     [DbContext(typeof(BancoDBContext))]
-    [Migration("20240217234421_Versao_01.00")]
+    [Migration("20240219182012_Versao_01.00")]
     partial class Versao_0100
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -53,6 +53,9 @@ namespace Back.Data.Migrations
                         .HasMaxLength(255);
 
                     b.Property<string>("ProjetoNome")
+                        .HasMaxLength(255);
+
+                    b.Property<string>("Sprint")
                         .HasMaxLength(255);
 
                     b.Property<string>("TimeId")

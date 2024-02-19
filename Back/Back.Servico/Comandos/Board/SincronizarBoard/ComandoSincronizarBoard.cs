@@ -1,11 +1,10 @@
-﻿using Back.Dominio.DTO.Board;
+﻿using Back.Dominio;
+using Back.Dominio.DTO.Board;
 using Back.Dominio.Interfaces;
 using Back.Dominio.Models;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Microsoft.TeamFoundation.Core.WebApi.Types;
-using Microsoft.TeamFoundation.Work.WebApi;
 using Microsoft.TeamFoundation.WorkItemTracking.WebApi;
 using Microsoft.TeamFoundation.WorkItemTracking.WebApi.Models;
 using Microsoft.VisualStudio.Services.Common;
@@ -29,6 +28,7 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
         private Conta _contaPrincipal;
         private Conta _contaSecundaria;
         private Configuracao _configuracao;
+        private int _areaId = 0;
 
         public ComandoSincronizarBoard(
             IRepositorioComando<Configuracao> repositorioComandoConfiguracao,
@@ -93,7 +93,7 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
             VssConnection connection1 = new VssConnection(new Uri(_contaPrincipal.UrlCorporacao), new VssBasicCredential(string.Empty, _contaPrincipal.Token));
 
             //Filtro data
-            DateTime data = DateTime.Now.AddDays(-_configuracao.Dia).Date;
+            string data = DateTime.Now.AddDays(-_configuracao.Dia).Date.ToString("yyyy-MM-dd");
 
             WorkItemTrackingHttpClient witClient = connection1.GetClient<WorkItemTrackingHttpClient>();
 
@@ -105,7 +105,7 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
                                 WHERE [System.AssignedTo] EVER @Me
                                 AND [System.TeamProject] = '{_contaPrincipal.ProjetoNome}'
                                 AND ([System.WorkItemType] = 'Task' OR [System.WorkItemType] = 'Bug')
-                                AND [System.ChangedDate] >= '{data}'"
+                                AND System.ChangedDate >= '{data} 00:00:00'"
             };
 
             _logger.LogInformation($"RecuperaItensSincronizar Query: {query.Query}");
@@ -128,15 +128,19 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
                 if (task.Relations is null)
                     continue;
 
+                int historiaId = 0;
                 // Recupera o pai (historia) da task
                 foreach (var hitoria in task.Relations)
                 {
-                    int hitoriaId = Convert.ToInt32(hitoria.Url.Split('/').Last());
-                    WorkItem historiaItem = await witClient.GetWorkItemAsync(hitoriaId);
+                    historiaId = Convert.ToInt32(hitoria.Url.Split('/').Last());
+                    WorkItem historiaItem = await witClient.GetWorkItemAsync(historiaId);
                     //Verifica se ja existe a historia
                     var hasHistoria = historias.FirstOrDefault(c => c.Historia.Id == historiaItem.Id);
                     if (hasHistoria != null)
-                        migrar = hasHistoria;
+                    {
+                        migrar.Historia = null;
+                        historiaId = historiaItem.Id.Value;
+                    }
                     else
                         migrar.Historia = historiaItem;
 
@@ -149,7 +153,15 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
                 if (hasTask is null)
                     migrar.Itens.Add(task);
 
-                historias.Add(migrar);
+                if (migrar.Historia is null)
+                {
+                    var historia = historias.FirstOrDefault(c => c.Historia.Id == historiaId);
+                    historia.Itens.AddRange(migrar.Itens);
+                }
+                else
+                {
+                    historias.Add(migrar);
+                }
             }
 
             return historias;
@@ -163,67 +175,89 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
             //Faz conexão com o azure
             VssConnection connection = new VssConnection(new Uri(_contaSecundaria.UrlCorporacao), new VssBasicCredential(string.Empty, _contaSecundaria.Token));
 
-            //WorkHttpClient workClient = connection.GetClient<WorkHttpClient>();
             WorkItemTrackingHttpClient witClient = connection.GetClient<WorkItemTrackingHttpClient>();
 
-            // Obter a lista de iterações por equipe
-            //TeamContext teamContext = new TeamContext(Guid.Parse(_contaSecundaria.ProjetoId), Guid.Parse(_contaSecundaria.TimeId));
-            //List<TeamSettingsIteration> iterations = await workClient.GetTeamIterationsAsync(teamContext);
-
-            //Pega o ultimo iteration
-            //var iteration = iterations.FirstOrDefault();
-
-            //_logger.LogInformation($"Interation destino: {iteration.Path}");
+            _areaId = await BuscarArea(witClient) ?? 0;
 
             foreach (var historia in historias)
             {
-                var resultado = await CadastrarItem(connection, historia.Historia, witClient);
+                var resultado = await CadastrarItem(connection, historia.Historia, witClient, 0);
                 _logger.LogInformation($"Resultado historia: {resultado}");
 
                 //Se não cadastrou/atualizou  a historia, vamos pular para o proximo
-                if (!resultado)
+                if (resultado is null)
                     continue;
 
-                //Se criou, vamos cadastrar os filhos
+                //Se criou/atualizou, vamos cadastrar/atualizar os filhos
                 foreach (var task in historia.Itens)
-                {
-                    await CadastrarItem(connection, task, witClient);
-                }
+                    await CadastrarItem(connection, task, witClient, resultado.Id.Value);
+
             }
         }
 
-        private async Task<bool> CadastrarItem(VssConnection connection, WorkItem item, WorkItemTrackingHttpClient witClient)
+        private async Task<int?> BuscarArea(WorkItemTrackingHttpClient witClient)
+        {
+            var areasNode = await witClient.GetClassificationNodeAsync(_contaSecundaria.ProjetoNome, TreeStructureGroup.Areas, depth: 2);
+
+            if (areasNode.Children is null)
+                return areasNode.Id;
+
+            var listaAreas = areasNode.Children.FirstOrDefault(e => _contaSecundaria.TimeNome.ToUpper().Contains(e.Name.ToUpper()));
+
+            if (listaAreas.Children != null)
+                return listaAreas.Children.FirstOrDefault(e => e.Name.ToUpper() == _contaSecundaria.AreaPath.ToUpper())?.Id;
+            else
+                return listaAreas.Id;
+        }
+
+        private async Task<WorkItem> CadastrarItem(VssConnection connection, WorkItem item, WorkItemTrackingHttpClient witClient, int historiaId)
         {
             try
             {
-                var itemTask = await VerificarSeItemExisteNoDestino(connection, item.Id.Value);
                 WorkItem resultado = new WorkItem();
+                var itemTask = await VerificarSeItemExisteNoDestino(connection, item.Id.Value);
                 var tipoTask = item.Fields["System.WorkItemType"].ToString();
+                var status = item.Fields["System.State"].ToString();
                 //Se não existir, vamos criar
                 if (itemTask is null)
                 {
                     _logger.LogInformation($"Fluxo cadastrar {tipoTask} - {item.Id}");
-                    var novoItemTask = TratarObjeto(item);
-                    //resultado = await witClient.CreateWorkItemAsync(novoItemTask, Guid.Parse(_contaSecundaria.ProjetoId), tipoTask);
+                    var novoItemTask = TratarObjeto(item, historiaId);
+                    resultado = await witClient.CreateWorkItemAsync(novoItemTask, Guid.Parse(_contaSecundaria.ProjetoId), tipoTask);
+                    //Não pode criar um item ja com status ativo, então cria como novo e logo atualiza
+                    if (status != Constantes.STATUS_NOVO)
+                    {
+                        var atualizarTask = new JsonPatchDocument
+                        {
+                             new JsonPatchOperation()
+                             {
+                               Operation = Operation.Replace,
+                               Path = "/fields/System.State",
+                               Value = status,
+                             }
+                        };
+                        await witClient.UpdateWorkItemAsync(atualizarTask, resultado.Id.Value);
+                    }
                 }
                 else
                 {
                     _logger.LogInformation($"Fluxo atualizar {tipoTask} - {item.Id}");
-                    var atualizarTask = TratarObjeto(item, Operation.Replace);
-                    //resultado = await witClient.UpdateWorkItemAsync(atualizarTask, itemTask.Id.Value);
+                    item.Fields["System.AssignedTo"] = itemTask.Fields["System.AssignedTo"];
+                    var atualizarTask = TratarObjeto(item, historiaId, Operation.Replace);
+                    resultado = await witClient.UpdateWorkItemAsync(atualizarTask, itemTask.Id.Value);
                 }
 
                 _logger.LogInformation($"Resultado: {resultado.Id}, tipo: {tipoTask}");
-                return true;
+                return resultado;
             }
             catch (Exception ex)
             {
                 _logger.LogError($"Resultado erro: {ex.Message}");
-                return false;
+                return null;
             }
         }
 
-        private JsonPatchDocument TratarObjeto(WorkItem item, Operation operacao = Operation.Add)
+        private JsonPatchDocument TratarObjeto(WorkItem item, int historiaId, Operation operacao = Operation.Add)
         {
 
             JsonPatchDocument patchDocument = new JsonPatchDocument
@@ -232,40 +266,60 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
                 {
                     Operation = operacao,
                     Path = "/fields/System.Title",
-                    Value = $"{item.Fields["System.Id"]} | {item.Fields["System.Title"]}",
+                    Value = $"{item.Id} | {item.Fields["System.Title"]}",
                 },
                 new JsonPatchOperation()
                 {
                     Operation = operacao,
-                    Path = "/fields/System.AreaPath",
-                    Value = $"{_contaSecundaria.AreaPath}"
+                    Path = "/fields/System.AreaId",
+                    Value = $"{_areaId}"
                 },
                 new JsonPatchOperation()
                 {
                     Operation = operacao,
                     Path = "/fields/System.IterationPath",
-                    Value = $"{_contaSecundaria.AreaPath}"
+                    Value = $"{_contaSecundaria.Sprint.Replace("Iteration\\", "")}"
                 },
                 new JsonPatchOperation()
                 {
                     Operation = operacao,
                     Path = "/fields/System.State",
-                    Value = $"{item.Fields["System.State"]}",
+                    Value = operacao == Operation.Add ? Constantes.STATUS_NOVO : $"{item.Fields["System.State"]}",
+                },
+                new JsonPatchOperation()
+                {
+                    Operation = operacao,
+                    Path = "/fields/System.Description",
+                    Value = $"{item.Fields["System.Description"]}",
                 },
                 new JsonPatchOperation()
                 {
                     Operation = operacao,
                     Path = "/fields/System.AssignedTo",
-                    Value = operacao == Operation.Add ? _contaSecundaria.NomeUsuario : $"{item.Fields["System.AssignedTo"]}",
+                    Value = operacao == Operation.Add ? _contaSecundaria.NomeUsuario : ((IdentityRef)item.Fields["System.AssignedTo"]).UniqueName,
                 }
             };
+            var tipoTask = item.Fields["System.WorkItemType"].ToString();
+            if ((tipoTask == Constantes.TIPO_ITEM_TASK || tipoTask == Constantes.TIPO_ITEM_BUG))
+            {
+                patchDocument.Add(new JsonPatchOperation()
+                {
+                    Operation = Operation.Add,
+                    Path = "/relations/-",
+                    Value = new
+                    {
+                        rel = "System.LinkTypes.Hierarchy-Reverse",
+                        url = $"{_contaSecundaria.UrlCorporacao}/{_contaSecundaria.ProjetoNome}/_apis/wit/workItems/{historiaId}",
+                    }
+                });
+            }
 
             return patchDocument;
         }
 
         private async Task<WorkItem> VerificarSeItemExisteNoDestino(VssConnection connection, int id)
         {
-            Wiql query = new Wiql() { Query = $@"SELECT [System.Id], [System.Title] FROM WorkItems WHERE [System.Title] CONTAINS WORDS '{id}'" };
+            Wiql query = new Wiql() { Query = $@"SELECT [System.Id], [System.Title] FROM WorkItems WHERE [System.Title] CONTAINS WORDS '{id} |'" };
 
             WorkItemTrackingHttpClient witClient = connection.GetClient<WorkItemTrackingHttpClient>();
 

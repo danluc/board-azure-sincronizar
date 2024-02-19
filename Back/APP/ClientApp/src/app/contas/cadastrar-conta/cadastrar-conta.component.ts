@@ -21,8 +21,9 @@ export class CadastrarContaComponent implements OnInit {
   public projetosSecundario: TeamProjectReference[] = [];
   public times: TeamProjectReference[] = [];
   public areas: TeamProjectReference[] = [];
+  public sprints: TeamProjectReference[] = [];
   public contaAtualizar: Conta[] = [];
-  public textoCarregando: string = "Salvando";
+  public textoCarregando: string = "Buscando contas...";
 
   constructor(
     private _contasControllerService: ContasControllerService,
@@ -49,6 +50,7 @@ export class CadastrarContaComponent implements OnInit {
       projetoSecundario: ["", [Validators.required]],
       time: ["", [Validators.required]],
       areaPath: ["", [Validators.required]],
+      sprint: ["", []],
     });
   }
 
@@ -163,8 +165,37 @@ export class CadastrarContaComponent implements OnInit {
       this.areas = res.dados;
 
       if (!this.cadastrar) {
-        let ps = res.dados.find((e) => e.path == this.contaAtualizar[1].areaPath);
+        let ps = res.dados.find((e) => e.name == this.contaAtualizar[1].areaPath);
         this.form.get("areaPath").setValue(ps);
+        this.buscarSprint();
+      }
+    } catch (error) {
+      this.carregando = false;
+    }
+  }
+
+  public async buscarSprint(): Promise<void> {
+    let url = this.form.get("urlSecundario").value;
+    let token = this.form.get("tokenSecundario").value;
+    let projeto = this.form.get("projetoSecundario").value;
+    let areaPath = this.form.get("areaPath").value;
+
+    if (url.length <= 1 || token.length <= 1 || projeto?.name?.length <= 1 || areaPath?.name?.length <= 1) {
+      return;
+    }
+
+    this.carregando = true;
+    this.textoCarregando = "Buscando sprint...";
+    this.sprints = [];
+    try {
+      let dados: BuscarIterationsDTO = { token: token, url: url, projetoNome: projeto.name, areaNome: areaPath.name };
+      const res = await this._timesControllerService.listaSprint(dados).toPromise();
+      this.carregando = false;
+      this.sprints = res.dados;
+
+      if (!this.cadastrar) {
+        let ps = res.dados.find((e) => e.path == this.contaAtualizar[1].sprint);
+        this.form.get("sprint").setValue(ps);
       }
     } catch (error) {
       this.carregando = false;
@@ -183,12 +214,13 @@ export class CadastrarContaComponent implements OnInit {
       {
         urlCorporacao: this.form.get("urlSecundario").value,
         token: this.form.get("tokenSecundario").value,
-        areaPath: this.form.get("areaPath").value?.path,
+        areaPath: this.form.get("areaPath").value?.name,
         nomeUsuario: this.form.get("nomeSecundario").value,
         projetoId: this.form.get("projetoSecundario").value?.id,
         timeId: this.form.get("time").value?.id,
         projetoNome: this.form.get("projetoSecundario").value?.name,
         timeNome: this.form.get("time").value?.name,
+        sprint: this.form.get("sprint").value?.path,
         principal: false,
       },
     ];

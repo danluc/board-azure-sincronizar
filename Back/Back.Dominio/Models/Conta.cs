@@ -10,6 +10,7 @@
         public string TimeNome { get; set; }
         public string TimeId { get; set; }
         public string AreaPath { get; set; }
+        public string Sprint { get; set; }
         public bool Principal { get; set; }
     }
 }

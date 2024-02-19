@@ -14,4 +14,5 @@ export class BuscarIterationsDTO {
   token?: string;
   projetoNome?: string;
   timeNome?: string;
+  areaNome?: string;
 }

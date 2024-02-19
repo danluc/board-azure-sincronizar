@@ -17,6 +17,10 @@ export class TimesControllerService extends BaseControllerService {
   }
 
   public listaAreas(dados: BuscarIterationsDTO): Observable<any> {
-    return this.post(`Times/BuscarAreas/`, dados);
+    return this.post(`Times/BuscarAreas`, dados);
+  }
+
+  public listaSprint(dados: BuscarIterationsDTO): Observable<any> {
+    return this.post(`Times/BuscarSprint`, dados);
   }
 }

@@ -69,7 +69,7 @@ namespace APP.Configuracoes
 
             //Log
             Log.Logger = new LoggerConfiguration()
-            .WriteTo.File($"{basedir}/Logs/log-{DateTime.Now.ToString("G")}.log")
+            .WriteTo.File($"{basedir}/Logs/log-{DateTime.Now.ToString("yyyy-MM-dd")}.log")
             .CreateLogger();
 
             return services;

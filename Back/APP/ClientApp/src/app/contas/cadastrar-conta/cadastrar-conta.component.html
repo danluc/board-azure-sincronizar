@@ -95,8 +95,15 @@
                     </div>
                     <div class="col-md-4">
                       <mat-form-field class="example-full-width">
-                        <mat-select formControlName="areaPath" placeholder="Area">
+                        <mat-select formControlName="areaPath" placeholder="Area" (selectionChange)="buscarSprint()">
                           <mat-option *ngFor="let item of this.areas" [value]="item">{{ item.name }}</mat-option>
+                        </mat-select>
+                      </mat-form-field>
+                    </div>
+                    <div class="col-md-4">
+                      <mat-form-field class="example-full-width">
+                        <mat-select formControlName="sprint" placeholder="Sprint">
+                          <mat-option *ngFor="let item of this.sprints" [value]="item">{{ item.name }}</mat-option>
                         </mat-select>
                       </mat-form-field>
                     </div>

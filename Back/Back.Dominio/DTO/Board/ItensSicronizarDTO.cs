@@ -7,6 +7,11 @@ namespace Back.Dominio.DTO.Board
 {
     public class ItensSicronizarDTO
     {
+        public ItensSicronizarDTO()
+        {
+            Itens = new List<WorkItem>();
+        }
+
         public WorkItem Historia { get; set; }
         public List<WorkItem> Itens { get; set; }
     }

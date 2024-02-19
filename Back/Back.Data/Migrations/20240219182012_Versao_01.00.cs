@@ -34,6 +34,7 @@ namespace Back.Data.Migrations
                     TimeNome = table.Column<string>(maxLength: 255, nullable: true),
                     TimeId = table.Column<string>(maxLength: 255, nullable: true),
                     AreaPath = table.Column<string>(nullable: true),
+                    Sprint = table.Column<string>(maxLength: 255, nullable: true),
                     Principal = table.Column<bool>(type: "Bit", nullable: false)
                 },
                 constraints: table =>

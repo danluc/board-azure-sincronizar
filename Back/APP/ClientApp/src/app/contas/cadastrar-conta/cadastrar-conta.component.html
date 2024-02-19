@@ -77,6 +77,8 @@
                         <mat-hint>Nome do usuário no Azure</mat-hint>
                       </mat-form-field>
                     </div>
+                  </div>
+                  <div class="row mt-3">
                     <div class="col-md-4">
                       <mat-form-field class="example-full-width">
                         <mat-select formControlName="projetoSecundario" placeholder="Projeto" (selectionChange)="buscarTimes()">
@@ -103,7 +105,12 @@
                 </div>
               </div>
 
-              <button mat-raised-button class="btn btn-danger bg-laranja-evertec pull-right mt-5" [disabled]="this.form.invalid || this.carregando">
+              <button
+                mat-raised-button
+                class="btn btn-danger bg-laranja-evertec pull-right mt-5"
+                (click)="this.salvar()"
+                [disabled]="this.form.invalid || this.carregando"
+              >
                 {{ this.carregando ? this.textoCarregando : "Salvar" }}
               </button>
               <div class="clearfix"></div>

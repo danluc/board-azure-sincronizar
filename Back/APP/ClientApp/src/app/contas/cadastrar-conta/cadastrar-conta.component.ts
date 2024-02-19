@@ -2,6 +2,7 @@ import { Component, OnInit } from "@angular/core";
 import { FormBuilder, FormGroup, Validators } from "@angular/forms";
 import { MatSnackBar } from "@angular/material/snack-bar";
 import { Router } from "@angular/router";
+import { Conta } from "app/core/models/conta";
 import { BuscarIterationsDTO, BuscarProjetoDTO, TeamProjectReference } from "app/core/models/team-project-reference";
 import { ContasControllerService } from "app/core/services/ContasController.service";
 import { ProjetosControllerService } from "app/core/services/ProjetosController.service";
@@ -13,12 +14,14 @@ import { TimesControllerService } from "app/core/services/TimesController.servic
   styleUrls: ["./cadastrar-conta.component.scss"],
 })
 export class CadastrarContaComponent implements OnInit {
+  public cadastrar: boolean = true;
   public carregando: boolean = false;
   public form: FormGroup;
   public projetosPrincipal: TeamProjectReference[] = [];
   public projetosSecundario: TeamProjectReference[] = [];
   public times: TeamProjectReference[] = [];
   public areas: TeamProjectReference[] = [];
+  public contaAtualizar: Conta[] = [];
   public textoCarregando: string = "Salvando";
 
   constructor(
@@ -32,14 +35,14 @@ export class CadastrarContaComponent implements OnInit {
 
   ngOnInit() {
     this._formularioCad();
+    this._buscarContas();
   }
 
   private _formularioCad(): void {
     this.form = this._formBuilder.group({
-      tokenPrincipal: ["", [Validators.maxLength(255), Validators.required]],
-      urlPrincipal: ["", [Validators.maxLength(255), Validators.required]],
+      tokenPrincipal: ["", [Validators.required]],
+      urlPrincipal: ["", [Validators.required]],
       projetoPrincipal: ["", [Validators.required]],
-      nomePrincipal: ["", [Validators.required]],
       tokenSecundario: ["", [Validators.required]],
       urlSecundario: ["", [Validators.required]],
       nomeSecundario: ["", [Validators.required]],
@@ -47,6 +50,26 @@ export class CadastrarContaComponent implements OnInit {
       time: ["", [Validators.required]],
       areaPath: ["", [Validators.required]],
     });
+  }
+
+  private async _buscarContas(): Promise<void> {
+    this.carregando = true;
+    const res = await this._contasControllerService.lista().toPromise();
+    this.carregando = false;
+    if (res.dados.length == 0) {
+      return;
+    }
+    this.contaAtualizar = res.dados;
+    this.cadastrar = false;
+    this.form.get("tokenPrincipal").setValue(this.contaAtualizar[0].token);
+    this.form.get("urlPrincipal").setValue(this.contaAtualizar[0].urlCorporacao);
+    this.buscarProjetos();
+
+    this.form.get("tokenSecundario").setValue(this.contaAtualizar[1].token);
+    this.form.get("urlSecundario").setValue(this.contaAtualizar[1].urlCorporacao);
+    this.buscarProjetos(false);
+
+    this.form.get("nomeSecundario").setValue(this.contaAtualizar[1].nomeUsuario);
   }
 
   public async buscarProjetos(principal: boolean = true): Promise<void> {
@@ -74,13 +97,22 @@ export class CadastrarContaComponent implements OnInit {
       this.carregando = false;
       if (principal) {
         this.projetosPrincipal = res.projetos;
+
+        if (!this.cadastrar) {
+          let p = res.projetos.find((e) => e.id == this.contaAtualizar[0].projetoId);
+          this.form.get("projetoPrincipal").setValue(p);
+        }
       } else {
         this.projetosSecundario = res.projetos;
+
+        if (!this.cadastrar) {
+          let ps = res.projetos.find((e) => e.id == this.contaAtualizar[1].projetoId);
+          this.form.get("projetoSecundario").setValue(ps);
+          this.buscarTimes();
+        }
       }
-      this.textoCarregando = "Salvando";
     } catch (error) {
       this.carregando = false;
-      this.textoCarregando = "Salvando";
     }
   }
 
@@ -100,10 +132,14 @@ export class CadastrarContaComponent implements OnInit {
       const res = await this._timesControllerService.lista(projeto.name, dados).toPromise();
       this.carregando = false;
       this.times = res.dados;
-      this.textoCarregando = "Salvando";
+
+      if (!this.cadastrar) {
+        let ps = res.dados.find((e) => e.id == this.contaAtualizar[1].timeId);
+        this.form.get("time").setValue(ps);
+        this.buscarAreas();
+      }
     } catch (error) {
       this.carregando = false;
-      this.textoCarregando = "Salvando";
     }
   }
 
@@ -125,10 +161,81 @@ export class CadastrarContaComponent implements OnInit {
       const res = await this._timesControllerService.listaAreas(dados).toPromise();
       this.carregando = false;
       this.areas = res.dados;
-      this.textoCarregando = "Salvando";
+
+      if (!this.cadastrar) {
+        let ps = res.dados.find((e) => e.path == this.contaAtualizar[1].areaPath);
+        this.form.get("areaPath").setValue(ps);
+      }
     } catch (error) {
       this.carregando = false;
-      this.textoCarregando = "Salvando";
+    }
+  }
+
+  private get _montarObj(): Conta[] {
+    let contas: Conta[] = [
+      {
+        urlCorporacao: this.form.get("urlPrincipal").value,
+        token: this.form.get("tokenPrincipal").value,
+        projetoId: this.form.get("projetoPrincipal").value?.id,
+        projetoNome: this.form.get("projetoPrincipal").value?.name,
+        principal: true,
+      },
+      {
+        urlCorporacao: this.form.get("urlSecundario").value,
+        token: this.form.get("tokenSecundario").value,
+        areaPath: this.form.get("areaPath").value?.path,
+        nomeUsuario: this.form.get("nomeSecundario").value,
+        projetoId: this.form.get("projetoSecundario").value?.id,
+        timeId: this.form.get("time").value?.id,
+        projetoNome: this.form.get("projetoSecundario").value?.name,
+        timeNome: this.form.get("time").value?.name,
+        principal: false,
+      },
+    ];
+    return contas;
+  }
+
+  public async salvar(): Promise<void> {
+    this.carregando = true;
+    this.textoCarregando = "Salvando...";
+    if (this.cadastrar) {
+      await this._cadastrar();
+    } else {
+      await this._atualizar();
+    }
+  }
+
+  private async _cadastrar(): Promise<void> {
+    try {
+      const contas = this._montarObj;
+      const res = await this._contasControllerService.cadastrar(contas).toPromise();
+      this.carregando = false;
+      this._snackBar.open("Contas cadastrada com sucesso!", "Fechar", {
+        duration: 3000,
+      });
+    } catch (error) {
+      this.carregando = false;
+      this._snackBar.open("Erro para cadastrar conta!", "Fechar", {
+        duration: 5000,
+      });
+    }
+  }
+
+  private async _atualizar(): Promise<void> {
+    try {
+      const contas = this._montarObj;
+      contas[0].id = this.contaAtualizar[0].id;
+      contas[1].id = this.contaAtualizar[1].id;
+      const res = await this._contasControllerService.atualizar(contas).toPromise();
+      this.carregando = false;
+      this._snackBar.open("Contas atualizadas com sucesso!", "Fechar", {
+        duration: 3000,
+      });
+    } catch (error) {
+      this.carregando = false;
+      this._snackBar.open("Erro ao atualizar conta!", "Fechar", {
+        duration: 5000,
+      });
     }
   }
 }

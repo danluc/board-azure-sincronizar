@@ -133,11 +133,22 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
                 {
                     int hitoriaId = Convert.ToInt32(hitoria.Url.Split('/').Last());
                     WorkItem historiaItem = await witClient.GetWorkItemAsync(hitoriaId);
-                    migrar.Historia = historiaItem;
+                    //Verifica se ja existe a historia
+                    var hasHistoria = historias.FirstOrDefault(c => c.Historia.Id == historiaItem.Id);
+                    if (hasHistoria != null)
+                        migrar = hasHistoria;
+                    else
+                        migrar.Historia = historiaItem;
+
                     _logger.LogInformation($"RecuperaItensSincronizar historia: {historiaItem.Id}");
                 }
                 _logger.LogInformation($"RecuperaItensSincronizar task: {task.Id}");
-                migrar.Itens.Add(task);
+
+                //Verifica se ja existe a task
+                var hasTask = migrar.Itens.FirstOrDefault(c => c.Id == task.Id);
+                if (hasTask is null)
+                    migrar.Itens.Add(task);
+
                 historias.Add(migrar);
             }
 
@@ -152,11 +163,11 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
             //Faz conexão com o azure
             VssConnection connection = new VssConnection(new Uri(_contaSecundaria.UrlCorporacao), new VssBasicCredential(string.Empty, _contaSecundaria.Token));
 
-            WorkHttpClient workClient = connection.GetClient<WorkHttpClient>();
+            //WorkHttpClient workClient = connection.GetClient<WorkHttpClient>();
             WorkItemTrackingHttpClient witClient = connection.GetClient<WorkItemTrackingHttpClient>();
 
             // Obter a lista de iterações por equipe
-            TeamContext teamContext = new TeamContext(Guid.Parse(_contaSecundaria.ProjetoId), Guid.Parse(_contaSecundaria.TimeId));
+            //TeamContext teamContext = new TeamContext(Guid.Parse(_contaSecundaria.ProjetoId), Guid.Parse(_contaSecundaria.TimeId));
             //List<TeamSettingsIteration> iterations = await workClient.GetTeamIterationsAsync(teamContext);
 
             //Pega o ultimo iteration
@@ -166,7 +177,7 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
 
             foreach (var historia in historias)
             {
-                var resultado = await CadastrarItem(connection, historia.Historia, _contaSecundaria.AreaPath, witClient);
+                var resultado = await CadastrarItem(connection, historia.Historia, witClient);
                 _logger.LogInformation($"Resultado historia: {resultado}");
 
                 //Se não cadastrou/atualizou  a historia, vamos pular para o proximo
@@ -176,12 +187,12 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
                 //Se criou, vamos cadastrar os filhos
                 foreach (var task in historia.Itens)
                 {
-                    await CadastrarItem(connection, task, _contaSecundaria.AreaPath, witClient);
+                    await CadastrarItem(connection, task, witClient);
                 }
             }
         }
 
-        private async Task<bool> CadastrarItem(VssConnection connection, WorkItem item, string iterationPath, WorkItemTrackingHttpClient witClient)
+        private async Task<bool> CadastrarItem(VssConnection connection, WorkItem item, WorkItemTrackingHttpClient witClient)
         {
             try
             {
@@ -192,14 +203,14 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
                 if (itemTask is null)
                 {
                     _logger.LogInformation($"Fluxo cadastrar {tipoTask} - {item.Id}");
-                    var novoItemTask = TratarObjeto(item, iterationPath);
-                    resultado = await witClient.CreateWorkItemAsync(novoItemTask, Guid.Parse(_contaSecundaria.ProjetoId), tipoTask);
+                    var novoItemTask = TratarObjeto(item);
+                    //resultado = await witClient.CreateWorkItemAsync(novoItemTask, Guid.Parse(_contaSecundaria.ProjetoId), tipoTask);
                 }
                 else
                 {
                     _logger.LogInformation($"Fluxo atualizar {tipoTask} - {item.Id}");
-                    var atualizarTask = TratarObjeto(item, iterationPath, Operation.Replace);
-                    resultado = await witClient.UpdateWorkItemAsync(atualizarTask, itemTask.Id.Value);
+                    var atualizarTask = TratarObjeto(item, Operation.Replace);
+                    //resultado = await witClient.UpdateWorkItemAsync(atualizarTask, itemTask.Id.Value);
                 }
 
                 _logger.LogInformation($"Resultado: {resultado.Id}, tipo: {tipoTask}");
@@ -212,7 +223,7 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
             }
         }
 
-        private JsonPatchDocument TratarObjeto(WorkItem item, string iterationPath, Operation operacao = Operation.Add)
+        private JsonPatchDocument TratarObjeto(WorkItem item, Operation operacao = Operation.Add)
         {
 
             JsonPatchDocument patchDocument = new JsonPatchDocument
@@ -233,7 +244,7 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
                 {
                     Operation = operacao,
                     Path = "/fields/System.IterationPath",
-                    Value = iterationPath
+                    Value = $"{_contaSecundaria.AreaPath}"
                 },
                 new JsonPatchOperation()
                 {

@@ -13,7 +13,8 @@ export class ListarContasComponent implements OnInit {
   constructor(private _contasControllerService: ContasControllerService, private _router: Router, private _snackBar: MatSnackBar) {}
 
   ngOnInit() {
-    this._buscarContas();
+    this._router.navigate(["/contas/add"]);
+    //this._buscarContas();
   }
 
   private _buscarContas(): void {

@@ -3,7 +3,8 @@ export class Conta {
   token?: string;
   nomeUsuario?: string;
   urlCorporacao?: string;
-  nomeProjeto?: string;
+  projetoNome?: string;
+  timeNome?: string;
   timeId?: string;
   projetoId?: string;
   areaPath?: string;

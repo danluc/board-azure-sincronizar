@@ -1,5 +1,6 @@
 ﻿using Back.Servico.Comandos.Board.SincronizarBoard;
 using Back.Servico.Consultas.Board.ListarSincronizacoes;
+using Back.Servico.Consultas.Board.UltimaSincronizacao;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
@@ -24,6 +25,16 @@ namespace APP.Controllers
                 return BadRequest(result.Mensagem);
 
             return Ok(result);
+        }
+        
+        [HttpGet("Ultimo")]
+        public async Task<ActionResult> Ultimo()
+        {
+            var result = await _mediator.Send(new ParametroUltimaSincronizacao());
+            if (!result.Sucesso)
+                return BadRequest(result.Mensagem);
+
+            return Ok(result.Dados);
         }
         
         [HttpPost("")]

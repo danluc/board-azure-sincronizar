@@ -48,10 +48,10 @@ export class DashboardComponent implements OnInit {
   public async listaSincronizar(): Promise<void> {
     this.carregando = true;
     try {
-      const res = await this._sincronizarControllerService.listar().toPromise();
+      const res = await this._sincronizarControllerService.ultimo().toPromise();
       this.carregando = false;
-      if (res.dados.length > 0) {
-        this.sincronizarDTO = res.dados[0];
+      if (res != null) {
+        this.sincronizarDTO = res;
         if (this.sincronizarDTO.status == 1) {
           this.carregando = true;
         }
@@ -69,9 +69,8 @@ export class DashboardComponent implements OnInit {
     try {
       setTimeout(() => {
         this.listaSincronizar();
-      }, 1000);
+      }, 100);
       const res = await this._sincronizarControllerService.sincronizar().toPromise();
-      this.listaSincronizar();
       this.carregando = false;
       this._snackBar.open("Sincronização realizada com sucesso!", "Ok", {
         duration: 4000,

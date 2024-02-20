@@ -1,5 +1,6 @@
 using APP.Configuracoes;
 using Back.Data.Context;
+using Back.Servico.Hubs.Notificacoes;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -33,11 +34,12 @@ namespace APP
                 var context = serviceScope.ServiceProvider.GetService<BancoDBContext>();
                 context.Database.Migrate();
             }
-
-            var serviceProvider = services.BuildServiceProvider();
-            await serviceProvider.AddServicosJob();
+           
+            services.AddSignalR();
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+            var serviceProvider = services.BuildServiceProvider();
+            await serviceProvider.AddServicosJob();
 
             // In production, the Angular files will be served from this directory
             services.AddSpaStaticFiles(configuration =>
@@ -60,19 +62,15 @@ namespace APP
             else
             {
                 app.UseExceptionHandler("/Error");
-                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
             }
 
-            // Habilitar o middleware para servir o Swagger gerado como um endpoint JSON
             app.UseSwagger();
 
-            // Habilitar o middleware para servir o swagger-ui (HTML, JS, CSS, etc.), 
-            // Especificando o Endpoint JSON Swagger.
             app.UseSwaggerUI(c =>
             {
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "DANIEL - Board");
-                c.RoutePrefix = "swagger"; //Adicione algum proefixo da URL caso queira
+                c.RoutePrefix = "swagger";
             });
 
             app.UseHttpsRedirection();
@@ -86,11 +84,13 @@ namespace APP
                     template: "{controller}/{action=Index}/{id?}");
             });
 
+            app.UseSignalR(configure =>
+            {
+                configure.MapHub<NotificationHub>("/api/hubs/notification");
+            });
+
             app.UseSpa(spa =>
             {
-                // To learn more about options for serving an Angular SPA from ASP.NET Core,
-                // see https://go.microsoft.com/fwlink/?linkid=864501
-
                 spa.Options.SourcePath = "ClientApp";
 
                 if (env.IsDevelopment())

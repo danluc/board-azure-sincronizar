@@ -65,6 +65,7 @@ namespace APP.Configuracoes
                     { "Bearer", new string[] { } }
                 });
             });
+
             string basedir = AppDomain.CurrentDomain.BaseDirectory;
 
             //Log

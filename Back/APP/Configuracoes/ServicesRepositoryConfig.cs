@@ -1,6 +1,8 @@
-﻿using Back.Data.Repository;
+﻿using APP.Configuracoes.Jobs;
+using Back.Data.Repository;
 using Back.Dominio.Interfaces;
 using Back.Dominio.Models;
+using Back.Servico.Hubs.Notificacoes;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace APP.Configuracoes
@@ -23,6 +25,12 @@ namespace APP.Configuracoes
             services.AddScoped<IRepositorioComando<Conta>, RepositorioComando<Conta>>();
             services.AddScoped<IRepositorioComando<Sincronizar>, RepositorioComando<Sincronizar>>();
 
+            #endregion
+
+
+            #region SERVICOS
+            services.AddScoped<NotificationHubService>();
+            services.AddScoped<SincronizarCron>();
             #endregion
 
             return services;

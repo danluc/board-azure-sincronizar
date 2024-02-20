@@ -12,25 +12,19 @@ namespace APP.Configuracoes.Jobs
     public class SincronizarCron : IJob
     {
         private readonly IMediator _mediator;
-        private readonly ILogger<SincronizarCron> _logger;
 
-        public SincronizarCron(IMediator mediator, ILogger<SincronizarCron> logger)
+        public SincronizarCron(IMediator mediator)
         {
             _mediator = mediator;
-            _logger = logger;
         }
         public async Task Execute(IJobExecutionContext context)
         {
             try
             {
-                _logger.LogInformation($"Cron sincronizar iniciado: {DateTime.Now}");
-                var result = await _mediator.Send(new ParametroSincronizarBoard());
-                _logger.LogInformation($"Cron sincronizar final: {DateTime.Now}");
+                await _mediator.Send(new ParametroSincronizarBoard());
             }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Cron sincronizar erro: {ex.Message}");
-            }
+            catch (Exception)
+            {}
         }
     }
 

@@ -3,6 +3,7 @@ using Back.Dominio.DTO.Board;
 using Back.Dominio.Enum;
 using Back.Dominio.Interfaces;
 using Back.Dominio.Models;
+using Back.Servico.Hubs.Notificacoes;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -26,6 +27,7 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
         private readonly IRepositorioConsulta<Configuracao> _repositorioConsultaConfiguracao;
         private readonly IRepositorioConsulta<Conta> _repositorioConsultaConta;
         private readonly ILogger<ComandoSincronizarBoard> _logger;
+        private readonly NotificationHubService _notificationHubService;
         private Conta _contaPrincipal;
         private Conta _contaSecundaria;
         private Configuracao _configuracao;
@@ -35,13 +37,15 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
             IRepositorioComando<Sincronizar> repositorioComandoSincronizar,
             IRepositorioConsulta<Configuracao> repositorioConsultaConfiguracao,
             IRepositorioConsulta<Conta> repositorioConsultaConta,
-            ILogger<ComandoSincronizarBoard> logger
+            ILogger<ComandoSincronizarBoard> logger,
+            NotificationHubService notificationHubService
             )
         {
             _repositorioComandoSincronizar = repositorioComandoSincronizar;
             _repositorioConsultaConfiguracao = repositorioConsultaConfiguracao;
             _repositorioConsultaConta = repositorioConsultaConta;
             _logger = logger;
+            _notificationHubService = notificationHubService;
         }
 
         public async Task<ResultadoSincronizarBoard> Handle(ParametroSincronizarBoard request, CancellationToken cancellationToken)
@@ -84,6 +88,9 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
                 _repositorioComandoSincronizar.Update(insert);
                 await _repositorioComandoSincronizar.SaveChangesAsync();
                 #endregion
+
+
+                await _notificationHubService.Notificar(Constantes.NOTIFICACAO_GRUPO_LOCAL);
 
                 return new ResultadoSincronizarBoard
                 {

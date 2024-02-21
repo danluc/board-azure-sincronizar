@@ -29,6 +29,7 @@ export class ConfiguracoesComponent implements OnInit {
   private _formularioCad(): void {
     this.form = this._formBuilder.group({
       dia: [this.configuracao?.dia, [Validators.maxLength(255), Validators.required]],
+      cliente: [this.configuracao?.cliente, [Validators.maxLength(255)]],
       horaCron: [this.configuracao?.horaCron, [Validators.maxLength(10), Validators.required]],
     });
   }
@@ -42,6 +43,7 @@ export class ConfiguracoesComponent implements OnInit {
         this.configuracao = res.dados[0];
         this.form.get("dia").setValue(this.configuracao.dia);
         this.form.get("horaCron").setValue(this.configuracao.horaCron);
+        this.form.get("cliente").setValue(this.configuracao.cliente);
       }
     } catch (error) {
       this.carregando = false;

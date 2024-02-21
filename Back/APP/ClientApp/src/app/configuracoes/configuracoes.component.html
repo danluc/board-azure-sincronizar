@@ -21,7 +21,7 @@
                       type="number"
                       placeholder="Dia(s) para buscar itens"
                     />
-                    <mat-hint>Buscar itens a parti da data atual menos {{this.form.get('dia').value}} dia(s)</mat-hint>
+                    <mat-hint>Buscar itens a parti da data atual menos {{ this.form.get("dia").value }} dia(s)</mat-hint>
                   </mat-form-field>
                 </div>
                 <div class="col-md-6">
@@ -35,6 +35,11 @@
                       [dropSpecialCharacters]="false"
                       [mask]="'00:00'"
                     />
+                  </mat-form-field>
+                </div>
+                <div class="col-md-6">
+                  <mat-form-field class="example-full-width">
+                    <input matInput formControlName="cliente" autocomplete="off" placeholder="Cliente" />
                   </mat-form-field>
                 </div>
               </div>

@@ -2,7 +2,6 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { BaseControllerService } from './base-contrller.service';
-import { Conta } from '../models/conta';
 import { Configuracao } from '../models/configuracao';
 
 @Injectable({

@@ -30,6 +30,7 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
         private readonly IRepositorioConsulta<Conta> _repositorioConsultaConta;
         private readonly ILogger<ComandoSincronizarBoard> _logger;
         private readonly NotificationHubService _notificationHubService;
+        private List<WorkItem> _itensSolicitacoes;
         private Conta _contaPrincipal;
         private Conta _contaSecundaria;
         private Configuracao _configuracao;
@@ -50,10 +51,14 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
             _repositorioConsultaConta = repositorioConsultaConta;
             _logger = logger;
             _notificationHubService = notificationHubService;
+            _itensSolicitacoes = new List<WorkItem>();
         }
 
         public async Task<ResultadoSincronizarBoard> Handle(ParametroSincronizarBoard request, CancellationToken cancellationToken)
         {
+            //Envia a notificação para o front
+            await _notificationHubService.NotificarInicio();
+
             var sincronizar = new Sincronizar { DataInicio = DateTime.Now, Status = (int)EStatusSincronizar.PROCESSANDO };
             try
             {
@@ -88,7 +93,7 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
                 await AtualizarUltimoSicronizar(EStatusSincronizar.CONCLUIDO);
                 #endregion
 
-                await _notificationHubService.Notificar(Constantes.NOTIFICACAO_GRUPO_LOCAL);
+                await _notificationHubService.NotificarFim();
 
                 return new ResultadoSincronizarBoard
                 {
@@ -100,6 +105,8 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
                 #region REGISTRANDO_TABELA
                 await AtualizarUltimoSicronizar(EStatusSincronizar.ERRO);
                 #endregion
+
+                await _notificationHubService.NotificarFim();
 
                 return new ResultadoSincronizarBoard
                 {
@@ -129,8 +136,11 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
                 Query = $@"SELECT [System.Id], [System.Title]  FROM WorkItems
                                 WHERE [System.AssignedTo] EVER @Me
                                 AND [System.TeamProject] = '{_contaPrincipal.ProjetoNome}'
-                                AND ([System.WorkItemType] = 'Task' OR [System.WorkItemType] = 'Bug')
-                                AND System.ChangedDate >= '{data} 00:00:00'"
+                                AND System.ChangedDate >= '{data} 00:00:00'
+                                AND ([System.WorkItemType] = '{Constantes.TIPO_ITEM_TASK}'
+                                    OR [System.WorkItemType] = '{Constantes.TIPO_ITEM_BUG}'
+                                    OR [System.WorkItemType] = '{Constantes.TIPO_ITEM_SOLICITACAO}')
+                                "
             };
 
             _logger.LogInformation($"RecuperaItensSincronizar Query: {query.Query}");
@@ -141,6 +151,7 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
             WorkItemQueryResult queryResult = await witClient.QueryByWiqlAsync(query, projetoId);
             IEnumerable<int> taskIds = queryResult.WorkItems.Select(wi => wi.Id);
             _logger.LogInformation($"RecuperaItensSincronizar Itens: {taskIds.Count()}");
+
             // Recupera as histórias, o item em si
             foreach (int taskId in taskIds)
             {
@@ -150,40 +161,45 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
                 WorkItem task = await witClient.GetWorkItemAsync(taskId, expand: WorkItemExpand.Relations);
 
                 //Pega apenas itens de trabalho
-                var itensRelacionados = task.Relations?.Where(e => e.Url.Contains("workItems")).ToList();
+                var historiaId = task.Fields.FirstOrDefault(c => c.Key.Contains("System.Parent")).Value;
 
                 //Se não tem pai (historia) não vamos migrar
-                if (task.Relations is null || itensRelacionados.Count == 0)
-                    continue;
-
-                int historiaId = 0;
-                // Recupera o pai (historia) da task
-                foreach (var hitoria in itensRelacionados)
+                if (historiaId is null)
                 {
-                    historiaId = Convert.ToInt32(hitoria.Url.Split('/').Last());
-                    WorkItem historiaItem = await witClient.GetWorkItemAsync(historiaId);
-                    //Verifica se ja existe a historia
-                    var hasHistoria = historias.FirstOrDefault(c => c.Historia.Id == historiaItem.Id);
-                    if (hasHistoria != null)
-                    {
-                        migrar.Historia = null;
-                        historiaId = historiaItem.Id.Value;
-                    }
-                    else
-                        migrar.Historia = historiaItem;
+                    //Verificar se é uma solicitação, ela não tem historia
+                    var tipoTask = task.Fields["System.WorkItemType"].ToString();
+                    if (tipoTask == Constantes.TIPO_ITEM_SOLICITACAO)
+                        _itensSolicitacoes.Add(task);
 
-                    _logger.LogInformation($"RecuperaItensSincronizar historia: {historiaItem.Id}");
+                    continue;
                 }
+
+
+                // Recupera o pai (historia) da task
+                var idHistoria = Convert.ToInt32(historiaId.ToString());
+                WorkItem historiaItem = await witClient.GetWorkItemAsync(idHistoria);
+                _logger.LogInformation($"RecuperaItensSincronizar historia: {historiaItem.Id}");
+
+                //Verifica se ja existe a historia no array para migrar
+                var hasHistoria = historias.FirstOrDefault(c => c.Historia.Id == historiaItem.Id);
+                if (hasHistoria != null)
+                {
+                    migrar.Historia = null;
+                    historiaId = historiaItem.Id.Value;
+                }
+                else
+                    migrar.Historia = historiaItem;
+
                 _logger.LogInformation($"RecuperaItensSincronizar task: {task.Id}");
 
-                //Verifica se ja existe a task
+                //Verifica se ja existe a task no array
                 var hasTask = migrar.Itens.FirstOrDefault(c => c.Id == task.Id);
                 if (hasTask is null)
                     migrar.Itens.Add(task);
 
                 if (migrar.Historia is null)
                 {
-                    var historia = historias.FirstOrDefault(c => c.Historia.Id == historiaId);
+                    var historia = historias.FirstOrDefault(c => c.Historia.Id == idHistoria);
                     historia.Itens.AddRange(migrar.Itens);
                 }
                 else
@@ -221,6 +237,13 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
                     await CadastrarItem(connection, task, witClient, resultado.Id.Value);
 
             }
+
+            //Verifica se tem soliciatação para migrar
+            foreach (var solicitacao in _itensSolicitacoes)
+            {
+                var resultado = await CadastrarItem(connection, solicitacao, witClient, 0);
+                _logger.LogInformation($"Resultado Solicitação: {resultado}");
+            }
         }
 
         private async Task<int?> BuscarArea(WorkItemTrackingHttpClient witClient)
@@ -231,6 +254,9 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
                 return areasNode.Id;
 
             var listaAreas = areasNode.Children.FirstOrDefault(e => _contaSecundaria.TimeNome.ToUpper().Contains(e.Name.ToUpper()));
+
+            if (listaAreas is null)
+                return areasNode.Id;
 
             if (listaAreas.Children != null)
                 return listaAreas.Children.FirstOrDefault(e => e.Name.ToUpper() == _contaSecundaria.AreaPath.ToUpper())?.Id;
@@ -256,23 +282,16 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
                     //Não pode criar um item ja com status ativo, então cria como novo e logo atualiza
                     if (status != Constantes.STATUS_NOVO)
                     {
-                        var atualizarTask = new JsonPatchDocument
-                        {
-                             new JsonPatchOperation()
-                             {
-                               Operation = Operation.Replace,
-                               Path = "/fields/System.State",
-                               Value = SincronizarHelper.BuscarStatusItem(status),
-                             }
-                        };
-                        await witClient.UpdateWorkItemAsync(atualizarTask, resultado.Id.Value);
+                        var patchDocument = new JsonPatchDocument();
+                        SincronizarHelper.AdicionarOperacao(patchDocument, Operation.Replace, "/fields/System.State", SincronizarHelper.BuscarStatusItem(status));
+                        await witClient.UpdateWorkItemAsync(patchDocument, resultado.Id.Value);
                     }
                     operation = Operation.Add;
                 }
                 else
                 {
                     _logger.LogInformation($"Fluxo atualizar {tipoTask} - {item.Id}");
-                    
+
                     item.Fields["System.AssignedTo"] = itemTask.Fields.FirstOrDefault(c => c.Key == "System.AssignedTo").Value ?? _contaSecundaria.NomeUsuario;
                     var atualizarTask = SincronizarHelper.TratarObjeto(item, historiaId, _contaSecundaria, _areaId, Operation.Replace);
                     resultado = await witClient.UpdateWorkItemAsync(atualizarTask, itemTask.Id.Value);
@@ -300,34 +319,23 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
 
                 //Se tiver cliente cadastrado
                 if (!string.IsNullOrEmpty(_configuracao.Cliente))
-                {
-                    patchDocument.Add(new JsonPatchOperation()
-                    {
-                        Operation = operacao,
-                        Path = "/fields/Custom.Cliente",
-                        Value = $"{_configuracao.Cliente}",
-                    });
-                }
+                    SincronizarHelper.AdicionarOperacao(patchDocument, operacao, "/fields/Custom.Cliente", _configuracao.Cliente);
 
                 //Se existe motivo do bug
-                var motivo = item.Fields.FirstOrDefault(c => c.Key == "Custom.CausaRaiz").Value?.ToString();
+                var motivo = itemOriginal.Fields.FirstOrDefault(c => c.Key == "Custom.CausaRaiz").Value?.ToString();
                 if (!string.IsNullOrEmpty(motivo))
                 {
+                    SincronizarHelper.AdicionarOperacao(patchDocument, operacao, "/fields/Custom.Motivodademanda", SincronizarHelper.BuscarMotivo(motivo));
+
+                    //Dev responsavel pelo bug                    
+                    var devResponsavel = item.Fields.FirstOrDefault(c => c.Key == "Custom.DevResponsavel").Value?.ToString();
                     patchDocument.Add(new JsonPatchOperation()
                     {
                         Operation = operacao,
-                        Path = "/fields/Custom.Motivodademanda",
-                        Value = SincronizarHelper.BuscarMotivo(motivo),
+                        Path = "/fields/Custom.DevResponsavel",
+                        Value = operacao == Operation.Add ? _contaSecundaria.NomeUsuario : string.IsNullOrEmpty(devResponsavel) ? ((IdentityRef)item.Fields["Custom.DevResponsavel"]).UniqueName : _contaSecundaria.NomeUsuario,
                     });
                 }
-
-                //Dev responsavel pelo bug
-                patchDocument.Add(new JsonPatchOperation()
-                {
-                    Operation = operacao,
-                    Path = "/fields/Custom.DevResponsavel",
-                    Value = operacao == Operation.Add ? _contaSecundaria.NomeUsuario : ((IdentityRef)item.Fields["Custom.DevResponsavel"]).UniqueName,
-                });
 
                 await witClient.UpdateWorkItemAsync(patchDocument, item.Id.Value);
             }

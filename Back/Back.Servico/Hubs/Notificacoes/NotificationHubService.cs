@@ -13,11 +13,7 @@ namespace Back.Servico.Hubs.Notificacoes
             _notificationHubContext = notificationHubContext;
         }
 
-        public async Task Notificar(string grupoLocal)
-        {
-            await _notificationHubContext.Clients
-                .Group(grupoLocal.ToString())
-                .SendAsync(Constantes.NOTIFICACAO_PRONTA);
-        }
+        public async Task NotificarInicio() => await _notificationHubContext.Clients.Group(Constantes.NOTIFICACAO_GRUPO_LOCAL).SendAsync(Constantes.NOTIFICACAO_INICIO);
+        public async Task NotificarFim() => await _notificationHubContext.Clients.Group(Constantes.NOTIFICACAO_GRUPO_LOCAL).SendAsync(Constantes.NOTIFICACAO_PRONTA);
     }
 }

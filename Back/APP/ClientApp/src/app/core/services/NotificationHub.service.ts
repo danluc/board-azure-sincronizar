@@ -20,11 +20,15 @@ export class NotificationHubService {
       .configureLogging(SignalR.LogLevel.Error)
       .build();
 
-    this.connection.start();
+    this.connection
+      .start()
+      .then(() => {
+        console.log("Sinal conectado");
+      })
+      .catch((err) => console.log(err));
   }
 
   public async stopConnection() {
-    this.connection.off("NovaNotificacao");
     await this.connection.stop();
   }
 }

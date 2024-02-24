@@ -1,13 +1,12 @@
 ﻿using Back.Servico.Comandos.Board.SincronizarBoard;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Quartz;
 using Quartz.Spi;
 using System;
 using System.Threading.Tasks;
 
-namespace APP.Configuracoes.Jobs
+namespace Back.Servico.Jobs
 {
     public class SincronizarCron : IJob
     {
@@ -24,7 +23,7 @@ namespace APP.Configuracoes.Jobs
                 await _mediator.Send(new ParametroSincronizarBoard());
             }
             catch (Exception)
-            {}
+            { }
         }
     }
 

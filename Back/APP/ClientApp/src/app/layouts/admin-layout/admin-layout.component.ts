@@ -169,13 +169,30 @@ export class AdminLayoutComponent implements OnInit {
   startNotificationHubConnection() {
     this._notificationHubService.startConnection();
     this._notificationHubService.connection.on("SincronizacaoFim", () => {
-      this._snackBar.open("Sincronização realizada!", "Ok", {
-        duration: 4000,
-      });
-      try {
-        this._dashboardComponent.carregando = false;
-        this._dashboardComponent.listaSincronizar();
-      } catch (error) {}
+      this._sincronizarFim();
     });
+
+    this._notificationHubService.connection.on("SincronizacaoInicio", () => {
+      this._sincronizarInicio();
+    });
+  }
+
+  private _sincronizarInicio(): void {
+    this._snackBar.open("Sincronização iniciada!", "Ok", {
+      duration: 3000,
+    });
+    try {
+      this._dashboardComponent.carregando = true;
+    } catch (error) {}
+  }
+
+  private _sincronizarFim(): void {
+    this._snackBar.open("Sincronização realizada!", "Ok", {
+      duration: 4000,
+    });
+    try {
+      this._dashboardComponent.carregando = false;
+      this._dashboardComponent.listaSincronizar();
+    } catch (error) {}
   }
 }

@@ -1,7 +1,8 @@
-﻿using APP.Configuracoes.Jobs;
-using Back.Data.Context;
+﻿using Back.Data.Context;
+using Back.Dominio;
 using Back.Dominio.Interfaces;
 using Back.Dominio.Models;
+using Back.Servico.Jobs;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -97,10 +98,10 @@ namespace APP.Configuracoes
 
                 await sched.Start();
 
-                var sincronizarJob = JobBuilder.Create<SincronizarCron>().WithIdentity("SincronizarJob", "group1").Build();
+                var sincronizarJob = JobBuilder.Create<SincronizarCron>().WithIdentity(Constantes.JOB_UM, Constantes.JOB_GRUPO_UM).Build();
 
                 var sincronizarJobTrigger = TriggerBuilder.Create()
-                    .WithIdentity("SincronizarJobTrigger", "group1")
+                    .WithIdentity(Constantes.JOB_UM_TRIGGER, Constantes.JOB_GRUPO_UM)
                     .StartNow()
                     .WithDailyTimeIntervalSchedule(c => c.WithIntervalInHours(24)//intervalo de hrs
                                                         .OnEveryDay()//todos os dias

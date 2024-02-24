@@ -13,6 +13,7 @@ namespace Back.Servico.Comandos.Board._Helpers
 {
     public static class SincronizarHelper
     {
+        #region PRIVADOS
         private static Dictionary<string, string> DicionarioMotivos()
         {
             Dictionary<string, string> Motivos = new Dictionary<string, string>()
@@ -61,88 +62,67 @@ namespace Back.Servico.Comandos.Board._Helpers
                {"Reaberto",     "Active"},
                {"Closed",       "Closed"},
                //{"Removido",     "Blocked"},
+
+               //SOLICITAÇÃO
+               {"WIP",      "Active"},
+               {"Blocked",  "Blocked"},
+               {"Resolved", "Closed"},
+               {"Canceled", "Blocked"},
             };
 
             return Status;
+        }
+
+        private static string ObterAssignedTo(object assignedTo) => assignedTo is string ? assignedTo.ToString() : ((IdentityRef)assignedTo).UniqueName;
+        #endregion
+
+        public static void AdicionarOperacao(JsonPatchDocument patchDocument, Operation operacao, string path, string value)
+        {
+            patchDocument.Add(new JsonPatchOperation
+            {
+                Operation = operacao,
+                Path = path,
+                Value = value
+            });
         }
 
         //Objeto para insert ou update no azure
         public static JsonPatchDocument TratarObjeto(WorkItem item, int historiaId, Conta _conta, int areaId, Operation operacao = Operation.Add)
         {
             var tipoTask = item.Fields["System.WorkItemType"].ToString();
-            JsonPatchDocument patchDocument = new JsonPatchDocument
-            {
-                new JsonPatchOperation()
-                {
-                    Operation = operacao,
-                    Path = "/fields/System.Title",
-                    Value = $"{item.Id}: {item.Fields["System.Title"]}",
-                },
-                new JsonPatchOperation()
-                {
-                    Operation = operacao,
-                    Path = "/fields/System.AreaId",
-                    Value = $"{areaId}"
-                },
-                new JsonPatchOperation()
-                {
-                    Operation = operacao,
-                    Path = "/fields/System.IterationPath",
-                    Value = $"{_conta.Sprint.Replace("Iteration\\", "")}"
-                },
-                new JsonPatchOperation()
-                {
-                    Operation = operacao,
-                    Path = "/fields/System.State",
-                    Value = operacao == Operation.Add ? Constantes.STATUS_NOVO : BuscarStatusItem(item.Fields["System.State"].ToString()),
-                },
-                new JsonPatchOperation()
-                {
-                    Operation = operacao,
-                    Path = "/fields/System.AssignedTo",
-                    Value = operacao == Operation.Add ? _conta.NomeUsuario : (item.Fields["System.AssignedTo"] is string) ? item.Fields["System.AssignedTo"] : ((IdentityRef)item.Fields["System.AssignedTo"]).UniqueName,
-                }
-            };
+            var patchDocument = new JsonPatchDocument();
 
-            //Verifica se tem descrição
+            AdicionarOperacao(patchDocument, operacao, "/fields/System.Title", $"{item.Id}: {item.Fields["System.Title"]}");
+            AdicionarOperacao(patchDocument, operacao, "/fields/System.AreaId", areaId.ToString());
+            AdicionarOperacao(patchDocument, operacao, "/fields/System.IterationPath", _conta.Sprint.Replace("Iteration\\", ""));
+
+            var estado = operacao == Operation.Add ? Constantes.STATUS_NOVO : BuscarStatusItem(item.Fields["System.State"].ToString());
+            AdicionarOperacao(patchDocument, operacao, "/fields/System.State", estado);
+
+            var assignedTo = operacao == Operation.Add ? _conta.NomeUsuario : ObterAssignedTo(item.Fields["System.AssignedTo"]);
+            AdicionarOperacao(patchDocument, operacao, "/fields/System.AssignedTo", assignedTo);
+
             var descricao = item.Fields.FirstOrDefault(c => c.Key == "System.Description").Value;
             if (descricao != null)
             {
-                patchDocument.Add(new JsonPatchOperation()
+                AdicionarOperacao(patchDocument, operacao, "/fields/System.Description", descricao.ToString());
+
+                var steps = item.Fields.FirstOrDefault(c => c.Key == "Microsoft.VSTS.TCM.ReproSteps").Value;
+                if (steps != null)
                 {
-                    Operation = operacao,
-                    Path = "/fields/System.Description",
-                    Value = $"{item.Fields["System.Description"]}",
-                });
+                    var descricaoFinal = (descricao == null) ? steps.ToString() : $"{descricao} <br/> {steps}";
+                    AdicionarOperacao(patchDocument, operacao, "/fields/System.Description", descricaoFinal);
+                }
             }
 
-            //Verifica se tem step
-            var steps = item.Fields.FirstOrDefault(c => c.Key == "Microsoft.VSTS.TCM.ReproSteps").Value;
-            if (steps != null)
-            {
-                descricao = (descricao == null) ? steps : $"{descricao} <br/> {steps}";
-                patchDocument.Add(new JsonPatchOperation()
-                {
-                    Operation = operacao,
-                    Path = "/fields/System.Description",
-                    Value = $"{descricao}",
-                });
-            }
-
-            //Campo obrigatorio BUG
-            if (tipoTask == Constantes.TIPO_ITEM_BUG)
-            {
-                patchDocument.Add(new JsonPatchOperation()
-                {
-                    Operation = operacao,
-                    Path = "/fields/Custom.BUGem",
-                    Value = $"Homologação",
-                });
-            }
-            
             //Se for Task ou Bug vincula a uma historia
             if ((tipoTask == Constantes.TIPO_ITEM_TASK || tipoTask == Constantes.TIPO_ITEM_BUG))
             {
+                //Campo obrigatorio BUG
+                if (tipoTask == Constantes.TIPO_ITEM_BUG)
+                    AdicionarOperacao(patchDocument, operacao, "/fields/Custom.BUGem", "Homologação");
+
+                //Link com a historia pai
                 patchDocument.Add(new JsonPatchOperation()
                 {
                     Operation = Operation.Add,
@@ -153,6 +133,15 @@ namespace Back.Servico.Comandos.Board._Helpers
                         url = $"{_conta.UrlCorporacao}/{_conta.ProjetoNome}/_apis/wit/workItems/{historiaId}",
                     }
                 });
+            }
+
+            if (tipoTask == Constantes.TIPO_ITEM_SOLICITACAO)
+            {
+                var descricaoServiceNow = item.Fields.FirstOrDefault(c => c.Key == "Custom.DescricaoServiceNow").Value?.ToString();
+                if(descricaoServiceNow != null)
+                    AdicionarOperacao(patchDocument, operacao, "/fields/System.Description", descricaoServiceNow);
+
+                AdicionarOperacao(patchDocument, operacao, "/fields/System.WorkItemType", Constantes.TIPO_ITEM_HISTORIA);
             }
 
             return patchDocument;

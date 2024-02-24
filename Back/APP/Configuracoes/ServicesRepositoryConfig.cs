@@ -1,9 +1,12 @@
-﻿using APP.Configuracoes.Jobs;
-using Back.Data.Repository;
+﻿using Back.Data.Repository;
 using Back.Dominio.Interfaces;
 using Back.Dominio.Models;
 using Back.Servico.Hubs.Notificacoes;
+using Back.Servico.Jobs;
 using Microsoft.Extensions.DependencyInjection;
+using Quartz;
+using Quartz.Impl;
+using Quartz.Spi;
 
 namespace APP.Configuracoes
 {
@@ -29,8 +32,11 @@ namespace APP.Configuracoes
 
 
             #region SERVICOS
+            services.AddSingleton<IJobFactory, SingletonJobFactory>();
+            services.AddSingleton<ISchedulerFactory, StdSchedulerFactory>();
             services.AddScoped<NotificationHubService>();
             services.AddScoped<SincronizarCron>();
+            services.AddScoped<QuartzHostedService>();
             #endregion
 
             return services;

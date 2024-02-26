@@ -94,7 +94,10 @@ namespace Back.Servico.Comandos.Board._Helpers
 
             AdicionarOperacao(patchDocument, operacao, "/fields/System.Title", $"{item.Id}: {item.Fields["System.Title"]}");
             AdicionarOperacao(patchDocument, operacao, "/fields/System.AreaId", areaId.ToString());
-            AdicionarOperacao(patchDocument, operacao, "/fields/System.IterationPath", _conta.Sprint.Replace("Iteration\\", ""));
+
+            //coloca a sprint so no cadastro
+            if(operacao == Operation.Add)
+                AdicionarOperacao(patchDocument, operacao, "/fields/System.IterationPath", _conta.Sprint.Replace("Iteration\\", ""));
 
             var estado = operacao == Operation.Add ? Constantes.STATUS_NOVO : BuscarStatusItem(item.Fields["System.State"].ToString());
             AdicionarOperacao(patchDocument, operacao, "/fields/System.State", estado);
@@ -142,6 +145,21 @@ namespace Back.Servico.Comandos.Board._Helpers
                     AdicionarOperacao(patchDocument, operacao, "/fields/System.Description", descricaoServiceNow);
 
                 AdicionarOperacao(patchDocument, operacao, "/fields/System.WorkItemType", Constantes.TIPO_ITEM_HISTORIA);
+            }
+
+            if (tipoTask == Constantes.TIPO_ITEM_HISTORIA)
+            {
+                var tecnico = item.Fields.FirstOrDefault(c => c.Key == "Custom.e0b31173-d9a6-471a-afe3-7a52d4e0ff9d").Value?.ToString();
+                if (tecnico != null)
+                    AdicionarOperacao(patchDocument, operacao, "/fields/Custom.Detalhe", tecnico);
+
+
+                var aceite = item.Fields.FirstOrDefault(c => c.Key == "Custom.88c5eab7-acc0-42bf-a522-614c59da35b0").Value?.ToString();
+                if (aceite != null)
+                {
+                    var descricaoFinal = (descricao == null) ? aceite.ToString() : $"{descricao} <br/> {aceite}";
+                    AdicionarOperacao(patchDocument, operacao, "/fields/System.Description", descricaoFinal);
+                }
             }
 
             return patchDocument;

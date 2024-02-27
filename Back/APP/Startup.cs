@@ -1,10 +1,9 @@
 using APP.Configuracoes;
 using Back.Data.Context;
 using Back.Servico.Hubs.Notificacoes;
+using ElectronNET.API;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SpaServices.AngularCli;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -28,6 +27,8 @@ namespace APP
             services.AddServicosConfig(Configuration);
             services.AddRepositoryConfig();
 
+            services.AddControllers();
+
             //Roda a migration
             using (var serviceScope = services.BuildServiceProvider().CreateScope())
             {
@@ -37,7 +38,7 @@ namespace APP
            
             services.AddSignalR();
 
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+            //services.AddMvc(options => options.EnableEndpointRouting = false);
             var serviceProvider = services.BuildServiceProvider();
             await serviceProvider.AddServicosJob();
 
@@ -48,40 +49,45 @@ namespace APP
             });
         }
 
+        private async void ElectronStatup()
+        {
+            var window = await Electron.WindowManager.CreateWindowAsync();
+
+            window.OnClosed += () => {
+                Electron.App.Quit();
+            };
+        }
+
+
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             var cultureInfo = new CultureInfo("pt-BR");
             CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
             CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
 
-            if (env.IsDevelopment())
+            if (HybridSupport.IsElectronActive)
             {
-                app.UseDeveloperExceptionPage();
-            }
-            else
-            {
-                app.UseExceptionHandler("/Error");
-                app.UseHsts();
+                ElectronStatup();
             }
 
             app.UseSwagger();
 
             app.UseSwaggerUI(c =>
             {
-                c.SwaggerEndpoint("/swagger/v1/swagger.json", "DANIEL - Board");
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "SINCRONIZAR BOARD");
                 c.RoutePrefix = "swagger";
             });
 
+            app.UseDeveloperExceptionPage();
             app.UseHttpsRedirection();
-            app.UseStaticFiles();
             app.UseSpaStaticFiles();
+            app.UseRouting();
 
-            app.UseMvc(routes =>
+            app.UseEndpoints(endpoints =>
             {
-                routes.MapRoute(
-                    name: "default",
-                    template: "{controller}/{action=Index}/{id?}");
+                endpoints.MapControllers();
+                endpoints.MapHub<NotificationHub>("/api/hubs/notification");
             });
 
             app.UseSignalR(configure =>
@@ -93,7 +99,7 @@ namespace APP
             {
                 spa.Options.SourcePath = "ClientApp";
 
-                if (env.IsDevelopment())
+                if (env.EnvironmentName.Contains("Development"))
                 {
                     spa.UseAngularCliServer(npmScript: "start");
                 }

@@ -7,6 +7,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.OpenApi.Models;
 using Microsoft.VisualStudio.Services.Common;
 using Microsoft.VisualStudio.Services.WebApi;
 using Quartz;
@@ -42,29 +43,7 @@ namespace APP.Configuracoes
 
             services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v1",
-                    new Info
-                    {
-                        Title = "Daniel - Board",
-                        Version = "v1",
-                        Description = "Daniel - Board",
-                        Contact = new Contact
-                        {
-                            Name = "Daniel Lucas",
-                            Url = "https://github.com/danluc"
-                        }
-                    });
-                c.AddSecurityDefinition("Bearer", new ApiKeyScheme()
-                {
-                    Description = "JWT Authorization header \"Authorization: Bearer {token}\"",
-                    Name = "Authorization",
-                    In = "header",
-                    Type = "apiKey"
-                });
-                c.AddSecurityRequirement(new Dictionary<string, IEnumerable<string>>
-                {
-                    { "Bearer", new string[] { } }
-                });
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "SINCRONIZAR BOARD", Version = "v1" });
             });
 
             string basedir = AppDomain.CurrentDomain.BaseDirectory;

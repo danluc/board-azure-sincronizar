@@ -13,7 +13,7 @@ namespace Back.Servico.Jobs
 {
     public class QuartzHostedService
     {
-        private readonly ISchedulerFactory _schedulerFactory;
+        /*private readonly ISchedulerFactory _schedulerFactory;
         private readonly IJobFactory _jobFactory;
         private readonly IScheduler _scheduler;
 
@@ -47,6 +47,6 @@ namespace Back.Servico.Jobs
 
             // Agendar o novo trigger para o job
             //await Scheduler.RescheduleJob(new TriggerKey(Constantes.JOB_UM_TRIGGER, Constantes.JOB_GRUPO_UM), sincronizarJobTrigger);
-        }
+        }*/
     }
 }

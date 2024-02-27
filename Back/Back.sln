@@ -17,7 +17,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Back.Servico", "Back.Servic
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Back.Dominio", "Back.Dominio\Back.Dominio.csproj", "{EA060CD9-129D-4083-B015-1ACB778EE8F5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "APP", "APP\APP.csproj", "{3FE4099A-C641-4E6A-91A8-349E21F2E67A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "APP", "APP\APP.csproj", "{3FE4099A-C641-4E6A-91A8-349E21F2E67A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

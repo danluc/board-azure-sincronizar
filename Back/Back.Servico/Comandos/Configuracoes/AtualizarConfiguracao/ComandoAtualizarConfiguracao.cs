@@ -17,17 +17,14 @@ namespace Back.Servico.Comandos.Configuracoes.AtualizarConfiguracao
     {
         private readonly IRepositorioComando<Configuracao> _repositorioComandoConfiguracao;
         private readonly IRepositorioConsulta<Configuracao> _repositorioConsultaConfiguracao;
-        private readonly QuartzHostedService _quartzHostedService;
 
         public ComandoAtualizarConfiguracao(
             IRepositorioComando<Configuracao> repositorioComandoConfiguracao,
-            IRepositorioConsulta<Configuracao> repositorioConsultaConfiguracao,
-            QuartzHostedService quartzHostedService
+            IRepositorioConsulta<Configuracao> repositorioConsultaConfiguracao
             )
         {
             _repositorioComandoConfiguracao = repositorioComandoConfiguracao;
             _repositorioConsultaConfiguracao = repositorioConsultaConfiguracao;
-            _quartzHostedService = quartzHostedService;
         }
 
         public async Task<ResultadoCadastrarConfiguracao> Handle(ParametroAtualizarConfiguracao request, CancellationToken cancellationToken)
@@ -41,9 +38,6 @@ namespace Back.Servico.Comandos.Configuracoes.AtualizarConfiguracao
 
                 if (configuracoes is null)
                     throw new Exception($"Nenhuma configuração encontrada na base de dados");
-
-                if (request.Dados[0].HoraCron != configuracoes.HoraCron)
-                    await _quartzHostedService.AtualizarHoraJob(cancellationToken, request.Dados[0].HoraCron);
 
                 _repositorioComandoConfiguracao.UpdateRange(request.Dados);
                 await _repositorioComandoConfiguracao.SaveChangesAsync();

@@ -1,30 +1,34 @@
 {
   "executable": "APP",
   "splashscreen": {
-    "imageFile": ""
+    "imageFile": "/wwwroot/icone.png"
   },
   "singleInstance": false,
   "build": {
-    "appId": "com.APP.app",
+    "appId": "com.syncboard.app",
     "productName": "APP",
-    "copyright": "Copyright © 2019",
+    "copyright": "Copyright © 2022",
     "buildVersion": "1.0.0",
     "compression": "maximum",
     "directories": {
-      "output": "../../../bin/Desktop"
+      "output": "../../../bin/Desktop",
+      "buildResources": "Assets"
+    },
+    "win": {
+      "icon": "Assets/electron.ico"
     },
     "extraResources": [
       {
         "from": "./bin",
         "to": "bin",
-        "filter": ["**/*"]
+        "filter": [ "**/*" ]
       }
     ],
     "files": [
       {
         "from": "./ElectronHostHook/node_modules",
         "to": "ElectronHostHook/node_modules",
-        "filter": ["**/*"]
+        "filter": [ "**/*" ]
       },
       "**/*"
     ]

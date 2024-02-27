@@ -1,5 +1,6 @@
 ﻿using Back.Data.Context;
 using Back.Dominio;
+using Back.Dominio.Enum;
 using Back.Dominio.Interfaces;
 using Back.Dominio.Models;
 using Back.Servico.Jobs;
@@ -17,6 +18,7 @@ using Swashbuckle.AspNetCore.Swagger;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace APP.Configuracoes
@@ -61,6 +63,17 @@ namespace APP.Configuracoes
             using (IServiceScope scope = services.CreateScope())
             {
                 var repoConsultaConfiguracao = scope.ServiceProvider.GetRequiredService<IRepositorioConsulta<Configuracao>>();
+                var repoConsultaSincronizar = scope.ServiceProvider.GetRequiredService<IRepositorioConsulta<Sincronizar>>();
+                var repoComandoSincronizar = scope.ServiceProvider.GetRequiredService<IRepositorioComando<Sincronizar>>();
+
+                var processando = await repoConsultaSincronizar.FindBy(e => e.Status == (int)EStatusSincronizar.PROCESSANDO);
+                foreach (var item in processando)
+                {
+                    item.DataFim = DateTime.Now;
+                    item.Status = (int)EStatusSincronizar.ERRO;
+                    repoComandoSincronizar.Update(item);
+                    await repoComandoSincronizar.SaveChangesAsync();
+                }
 
                 var config = await repoConsultaConfiguracao.Query().FirstOrDefaultAsync();
                 var horaCron = config.HoraCron.Split(":");

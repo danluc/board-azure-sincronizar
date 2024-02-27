@@ -96,7 +96,7 @@ namespace Back.Servico.Comandos.Board._Helpers
             AdicionarOperacao(patchDocument, operacao, "/fields/System.AreaId", areaId.ToString());
 
             //coloca a sprint so no cadastro
-            if(operacao == Operation.Add)
+            if(operacao == Operation.Add || (tipoTask != Constantes.TIPO_ITEM_HISTORIA))
                 AdicionarOperacao(patchDocument, operacao, "/fields/System.IterationPath", _conta.Sprint.Replace("Iteration\\", ""));
 
             var estado = operacao == Operation.Add ? Constantes.STATUS_NOVO : BuscarStatusItem(item.Fields["System.State"].ToString());

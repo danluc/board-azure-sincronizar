@@ -142,7 +142,6 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
                                     OR [System.WorkItemType] = '{Constantes.TIPO_ITEM_SOLICITACAO}')
                                 "
             };
-
             _logger.LogInformation($"RecuperaItensSincronizar Query: {query.Query}");
 
             Guid projetoId = Guid.Parse(_contaPrincipal.ProjetoId);
@@ -173,7 +172,6 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
 
                     continue;
                 }
-
 
                 // Recupera o pai (historia) da task
                 var idHistoria = Convert.ToInt32(historiaId.ToString());
@@ -359,7 +357,7 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
                 return null;
 
             return await witClient.GetWorkItemAsync(task.Id, expand: WorkItemExpand.Relations);
-        }
+        }      
 
         private async Task AtualizarUltimoSicronizar(EStatusSincronizar eStatus)
         {

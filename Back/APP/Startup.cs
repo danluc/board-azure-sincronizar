@@ -2,6 +2,7 @@ using APP.Configuracoes;
 using Back.Data.Context;
 using Back.Servico.Hubs.Notificacoes;
 using ElectronNET.API;
+using ElectronNET.API.Entities;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.SpaServices.AngularCli;
@@ -51,7 +52,36 @@ namespace APP
 
         private async void ElectronStatup()
         {
-            var window = await Electron.WindowManager.CreateWindowAsync();
+            var window = await Electron.WindowManager.CreateWindowAsync(new BrowserWindowOptions
+            {
+                Width = 1152,
+                Height = 940,
+                Show = false
+            });
+
+            await window.WebContents.Session.ClearCacheAsync();
+
+            window.OnReadyToShow += () => window.Show();
+            window.SetTitle("Sincronizar board");
+
+            /* var TrayMenu = new MenuItem[]
+             {
+                 new MenuItem{
+                     Label = "Abrir",
+                     Click = () => { window.Show(); }
+                 },
+                 new MenuItem{
+                     Label = "Ocultar",
+                     Click = () => { window.Hide(); }
+                 },
+                 new MenuItem{
+                     Label = "Sair",
+                     Click = () => { Electron.App.Exit(0); }
+                 }
+             };
+
+             Electron.Tray.Show("/wwwroot/icone.png", TrayMenu);*/
+
 
             window.OnClosed += () => {
                 Electron.App.Quit();

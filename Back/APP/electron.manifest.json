@@ -1,21 +1,17 @@
 {
   "executable": "APP",
   "splashscreen": {
-    "imageFile": "/wwwroot/icone.png"
+    "imageFile": ""
   },
   "singleInstance": false,
   "build": {
-    "appId": "com.syncboard.app",
-    "productName": "APP",
-    "copyright": "Copyright © 2022",
+    "appId": "com.APP.app",
+    "productName": "SicronizarBoard",
+    "copyright": "Copyright © 2024",
     "buildVersion": "1.0.0",
     "compression": "maximum",
     "directories": {
-      "output": "../../../bin/Desktop",
-      "buildResources": "Assets"
-    },
-    "win": {
-      "icon": "Assets/electron.ico"
+      "output": "../../../bin/Desktop"
     },
     "extraResources": [
       {

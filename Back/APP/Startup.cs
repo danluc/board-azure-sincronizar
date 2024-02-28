@@ -2,13 +2,13 @@ using APP.Configuracoes;
 using Back.Data.Context;
 using Back.Servico.Hubs.Notificacoes;
 using ElectronNET.API;
-using ElectronNET.API.Entities;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.SpaServices.AngularCli;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using System;
 using System.Globalization;
 
 namespace APP
@@ -52,36 +52,12 @@ namespace APP
 
         private async void ElectronStatup()
         {
-            var window = await Electron.WindowManager.CreateWindowAsync(new BrowserWindowOptions
-            {
-                Width = 1152,
-                Height = 940,
-                Show = false
-            });
+            var window = await Electron.WindowManager.CreateWindowAsync();
 
-            await window.WebContents.Session.ClearCacheAsync();
-
-            window.OnReadyToShow += () => window.Show();
-            window.SetTitle("Sincronizar board");
-
-            /* var TrayMenu = new MenuItem[]
-             {
-                 new MenuItem{
-                     Label = "Abrir",
-                     Click = () => { window.Show(); }
-                 },
-                 new MenuItem{
-                     Label = "Ocultar",
-                     Click = () => { window.Hide(); }
-                 },
-                 new MenuItem{
-                     Label = "Sair",
-                     Click = () => { Electron.App.Exit(0); }
-                 }
-             };
-
-             Electron.Tray.Show("/wwwroot/icone.png", TrayMenu);*/
-
+            //Mostrar DevTools
+            bool devTools = Convert.ToBoolean(Configuration.GetSection("Electron:DevTools").Value ?? "false");
+            if(devTools)
+                window.WebContents.OpenDevTools();
 
             window.OnClosed += () => {
                 Electron.App.Quit();
@@ -113,6 +89,7 @@ namespace APP
             app.UseHttpsRedirection();
             app.UseSpaStaticFiles();
             app.UseRouting();
+            app.UseCors(x => x.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
 
             app.UseEndpoints(endpoints =>
             {

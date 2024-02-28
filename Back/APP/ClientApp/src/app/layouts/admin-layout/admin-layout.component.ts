@@ -131,7 +131,11 @@ export class AdminLayoutComponent implements OnInit {
       }
     });
 
-    this.startNotificationHubConnection();
+    try {
+      this.startNotificationHubConnection();
+    } catch (error) {
+      
+    }
   }
   ngAfterViewInit() {
     this.runOnRouteChange();

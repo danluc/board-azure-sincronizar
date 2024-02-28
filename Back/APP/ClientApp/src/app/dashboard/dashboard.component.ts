@@ -76,6 +76,7 @@ export class DashboardComponent implements OnInit {
         duration: 3000,
       });
       this.carregando = false;
+      this.listaSincronizar();
     }
   }
 }

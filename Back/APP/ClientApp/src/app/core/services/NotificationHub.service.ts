@@ -15,7 +15,8 @@ export class NotificationHubService {
   }
 
   public startConnection() {
-    this.connection = new SignalR.HubConnectionBuilder()
+    try {
+      this.connection = new SignalR.HubConnectionBuilder()
       .withUrl(`${environment.apiUrl}hubs/notification`)
       .configureLogging(SignalR.LogLevel.Error)
       .build();
@@ -26,6 +27,9 @@ export class NotificationHubService {
         console.log("Sinal conectado");
       })
       .catch((err) => console.log(err));
+    } catch (error) {
+      console.log(error)
+    }
   }
 
   public async stopConnection() {

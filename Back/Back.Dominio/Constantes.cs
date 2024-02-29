@@ -11,6 +11,7 @@
         public const string TIPO_ITEM_BUG = "Bug";
         public const string TIPO_ITEM_SOLICITACAO = "Solicitação";
         public const string TIPO_ITEM_HISTORIA = "User Story";
+        public const string TIPO_ITEM_ENABLER = "Enabler";
         #endregion
 
         #region NOTIFICACAO

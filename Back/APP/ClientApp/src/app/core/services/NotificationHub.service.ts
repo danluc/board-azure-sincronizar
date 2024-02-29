@@ -17,18 +17,23 @@ export class NotificationHubService {
   public startConnection() {
     try {
       this.connection = new SignalR.HubConnectionBuilder()
-      .withUrl(`${environment.apiUrl}hubs/notification`)
-      .configureLogging(SignalR.LogLevel.Error)
-      .build();
+        .withAutomaticReconnect({
+          nextRetryDelayInMilliseconds: () => 1000 + Math.random() * 100,
+        })
+        .withUrl(`${environment.apiUrl}hubs/notification`)
+        .configureLogging(SignalR.LogLevel.Trace)
+        .build();
 
-    this.connection
-      .start()
-      .then(() => {
-        console.log("Sinal conectado");
-      })
-      .catch((err) => console.log(err));
+      this.connection
+        .start()
+        .then(() => {
+          console.log("Sinal conectado");
+        })
+        .catch((err) => console.log(err));
+      sessionStorage.setItem("SingnalConectado", "true");
     } catch (error) {
-      console.log(error)
+      console.log(error);
+      sessionStorage.setItem("SingnalConectado", "false");
     }
   }
 

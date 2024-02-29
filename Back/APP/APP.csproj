@@ -74,6 +74,9 @@
     <Content Update="wwwroot\electron.ico">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Update="wwwroot\icone.ico">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Update="wwwroot\icone.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

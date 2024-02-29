@@ -96,7 +96,7 @@ namespace Back.Servico.Comandos.Board._Helpers
             AdicionarOperacao(patchDocument, operacao, "/fields/System.AreaId", areaId.ToString());
 
             //coloca a sprint so no cadastro
-            if(operacao == Operation.Add || (tipoTask != Constantes.TIPO_ITEM_HISTORIA))
+            if (operacao == Operation.Add)
                 AdicionarOperacao(patchDocument, operacao, "/fields/System.IterationPath", _conta.Sprint.Replace("Iteration\\", ""));
 
             var estado = operacao == Operation.Add ? Constantes.STATUS_NOVO : BuscarStatusItem(item.Fields["System.State"].ToString());
@@ -141,11 +141,15 @@ namespace Back.Servico.Comandos.Board._Helpers
             if (tipoTask == Constantes.TIPO_ITEM_SOLICITACAO)
             {
                 var descricaoServiceNow = item.Fields.FirstOrDefault(c => c.Key == "Custom.DescricaoServiceNow").Value?.ToString();
-                if(descricaoServiceNow != null)
+                if (descricaoServiceNow != null)
                     AdicionarOperacao(patchDocument, operacao, "/fields/System.Description", descricaoServiceNow);
 
                 AdicionarOperacao(patchDocument, operacao, "/fields/System.WorkItemType", Constantes.TIPO_ITEM_HISTORIA);
             }
+
+            if (tipoTask == Constantes.TIPO_ITEM_ENABLER)
+                AdicionarOperacao(patchDocument, operacao, "/fields/System.WorkItemType", Constantes.TIPO_ITEM_HISTORIA);
+
 
             if (tipoTask == Constantes.TIPO_ITEM_HISTORIA)
             {

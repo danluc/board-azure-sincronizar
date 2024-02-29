@@ -162,6 +162,7 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
 
                 //Busca a task
                 WorkItem task = await witClient.GetWorkItemAsync(taskId, expand: WorkItemExpand.Relations);
+                var tipoTask = task.Fields["System.WorkItemType"].ToString();
 
                 //Pega apenas itens de trabalho
                 var historiaId = task.Fields.FirstOrDefault(c => c.Key.Contains("System.Parent")).Value;
@@ -170,12 +171,21 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
                 if (historiaId is null)
                 {
                     //Verificar se é uma solicitação, ela não tem historia
-                    var tipoTask = task.Fields["System.WorkItemType"].ToString();
                     if (tipoTask == Constantes.TIPO_ITEM_SOLICITACAO)
                         _itensSolicitacoes.Add(task);
 
                     continue;
                 }
+
+                //Se for enable não vamos pegar o pai
+                //Cadastramos como solicitação
+                if (tipoTask == Constantes.TIPO_ITEM_ENABLER)
+                {
+                    _itensSolicitacoes.Add(task);
+
+                    continue;
+                }
+                    
 
                 // Recupera o pai (historia) da task
                 var idHistoria = Convert.ToInt32(historiaId.ToString());
@@ -240,11 +250,11 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
 
             }
 
-            //Verifica se tem soliciatação para migrar
+            //cadastra solicitação/enable
             foreach (var solicitacao in _itensSolicitacoes)
             {
                 var resultado = await CadastrarItem(connection, solicitacao, witClient, 0);
-                _logger.LogInformation($"Resultado Solicitação: {resultado}");
+                _logger.LogInformation($"Resultado Solicitação/Enabler: {resultado}");
             }
         }
 
@@ -377,7 +387,6 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
             { }
         }
 
-
         private async Task AtualizarStatusHistorias()
         {
             //Faz conexão com o azure
@@ -397,6 +406,7 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
                                 WHERE [System.AssignedTo] EVER @Me
                                 AND [System.TeamProject] = '{_contaPrincipal.ProjetoNome}'
                                 AND System.ChangedDate >= '{data} 00:00:00'
+                                AND System.State = 'Em produção'
                                 AND [System.WorkItemType] = '{Constantes.TIPO_ITEM_HISTORIA}'"
             };
             _logger.LogInformation($"Recupera historias fechadas Query: {query.Query}");

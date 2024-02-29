@@ -2,6 +2,7 @@ using APP.Configuracoes;
 using Back.Data.Context;
 using Back.Servico.Hubs.Notificacoes;
 using ElectronNET.API;
+using ElectronNET.API.Entities;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.SpaServices.AngularCli;
@@ -36,7 +37,7 @@ namespace APP
                 var context = serviceScope.ServiceProvider.GetService<BancoDBContext>();
                 context.Database.Migrate();
             }
-           
+
             services.AddSignalR();
 
             //services.AddMvc(options => options.EnableEndpointRouting = false);
@@ -52,16 +53,47 @@ namespace APP
 
         private async void ElectronStatup()
         {
-            var window = await Electron.WindowManager.CreateWindowAsync();
+            var browserOptions = new BrowserWindowOptions
+            {
+                Width = 1000,
+                Height = 900,
+            };
+
+            var window = await Electron.WindowManager.CreateWindowAsync(browserOptions);
+
+            //Menu
+            var menu = new MenuItem[] { };
+            Electron.Menu.SetApplicationMenu(menu);
 
             //Mostrar DevTools
             bool devTools = Convert.ToBoolean(Configuration.GetSection("Electron:DevTools").Value ?? "false");
-            if(devTools)
+            if (devTools)
                 window.WebContents.OpenDevTools();
 
-            window.OnClosed += () => {
-                Electron.App.Quit();
-            };
+
+            Electron.IpcMain.On("hideToSystemTray", (e) =>
+            {
+                window.Hide();
+                if (Electron.Tray.MenuItems.Count == 0)
+                {
+                    var menu = new MenuItem[]
+                    {
+                        new MenuItem
+                        {
+                            Label = "Abrir",
+                            Click = () => window.Show()
+                        },
+                        new MenuItem
+                        {
+                            Label = "Sair",
+                            Click = () => Electron.App.Exit()
+                        }
+                    };
+
+                    Electron.Tray.Show(@"..\bin\wwwroot\icone.ico", menu);
+                    Electron.Tray.SetToolTip("Sincronizar Board");
+                }
+            });
         }
 
 

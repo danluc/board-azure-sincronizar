@@ -11,6 +11,7 @@ import { Sincronizar } from "app/core/models/sincronizar";
   styleUrls: ["./dashboard.component.scss"],
 })
 export class DashboardComponent implements OnInit {
+  public singnalConectado: boolean = sessionStorage.getItem("SingnalConectado") == "true";
   public carregando: boolean = false;
   public sincronizarDTO: Sincronizar;
   constructor(
@@ -71,6 +72,12 @@ export class DashboardComponent implements OnInit {
       const res = await this._sincronizarControllerService.sincronizar().toPromise();
       this.listaSincronizar();
       this.carregando = false;
+
+      if (!this.singnalConectado) {
+        this._snackBar.open("Sincronização realizada!", "Ok", {
+          duration: 4000,
+        });
+      }
     } catch (error) {
       this._snackBar.open("Erro ao sincronizar boards", "Fechar", {
         duration: 3000,

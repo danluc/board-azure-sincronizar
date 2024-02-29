@@ -1,7 +1,7 @@
 {
   "executable": "APP",
   "splashscreen": {
-    "imageFile": ""
+    "imageFile": "/wwwroot/icone.png"
   },
   "singleInstance": false,
   "build": {
@@ -12,6 +12,9 @@
     "compression": "maximum",
     "directories": {
       "output": "../../../bin/Desktop"
+    },
+    "win": {
+      "icon": "bin/Assets/icone.ico"
     },
     "extraResources": [
       {

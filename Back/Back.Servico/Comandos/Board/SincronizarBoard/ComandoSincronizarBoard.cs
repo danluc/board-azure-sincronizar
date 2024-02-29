@@ -93,6 +93,10 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
                 await AtualizarUltimoSicronizar(EStatusSincronizar.CONCLUIDO);
                 #endregion
 
+
+                //Atualizar historias fechadas
+                await AtualizarStatusHistorias();
+
                 await _notificationHubService.NotificarFim();
 
                 return new ResultadoSincronizarBoard
@@ -357,7 +361,7 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
                 return null;
 
             return await witClient.GetWorkItemAsync(task.Id, expand: WorkItemExpand.Relations);
-        }      
+        }
 
         private async Task AtualizarUltimoSicronizar(EStatusSincronizar eStatus)
         {
@@ -371,6 +375,61 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
             }
             catch (Exception)
             { }
+        }
+
+
+        private async Task AtualizarStatusHistorias()
+        {
+            //Faz conexão com o azure
+            VssConnection connection1 = new VssConnection(new Uri(_contaPrincipal.UrlCorporacao), new VssBasicCredential(string.Empty, _contaPrincipal.Token));
+            VssConnection conectDestino = new VssConnection(new Uri(_contaSecundaria.UrlCorporacao), new VssBasicCredential(string.Empty, _contaSecundaria.Token));
+
+            //Filtro data
+            string data = DateTime.Now.AddDays(-60).Date.ToString("yyyy-MM-dd");
+
+            WorkItemTrackingHttpClient witClient = connection1.GetClient<WorkItemTrackingHttpClient>();
+
+            // Query para buscar os itens (bug e task) do usuário que está assinadas ou ja foi assinadas a ele
+            // Primeiro busca a task e por task, pega a historia
+            Wiql query = new Wiql()
+            {
+                Query = $@"SELECT [System.Id], [System.Title]  FROM WorkItems
+                                WHERE [System.AssignedTo] EVER @Me
+                                AND [System.TeamProject] = '{_contaPrincipal.ProjetoNome}'
+                                AND System.ChangedDate >= '{data} 00:00:00'
+                                AND [System.WorkItemType] = '{Constantes.TIPO_ITEM_HISTORIA}'"
+            };
+            _logger.LogInformation($"Recupera historias fechadas Query: {query.Query}");
+
+            Guid projetoId = Guid.Parse(_contaPrincipal.ProjetoId);
+
+            //Roda a query
+            WorkItemQueryResult queryResult = await witClient.QueryByWiqlAsync(query, projetoId);
+            IEnumerable<int> taskIds = queryResult.WorkItems.Select(wi => wi.Id);
+            _logger.LogInformation($"Historias fechadas: {taskIds.Count()}");
+
+            // Recupera as histórias, o item em si
+            foreach (int taskId in taskIds)
+            {
+                //Busca a historia
+                WorkItem task = await witClient.GetWorkItemAsync(taskId);
+
+                //Busca a historia que existe no board de destino
+                var historia = await VerificarSeItemExisteNoDestino(conectDestino, taskId);
+
+                if (historia is null)
+                    continue;
+
+                var status = SincronizarHelper.BuscarStatusItem(task.Fields["System.State"].ToString());
+                //Não pode criar um item ja com status ativo, então cria como novo e logo atualiza
+                if (status != historia.Fields["System.State"].ToString())
+                {
+                    _logger.LogInformation($"Historia fechada: {historia.Id.Value}");
+                    var patchDocument = new JsonPatchDocument();
+                    SincronizarHelper.AdicionarOperacao(patchDocument, Operation.Replace, "/fields/System.State", SincronizarHelper.BuscarStatusItem(status));
+                    await witClient.UpdateWorkItemAsync(patchDocument, historia.Id.Value);
+                }
+            }
         }
     }
 }

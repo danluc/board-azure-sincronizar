@@ -15,5 +15,8 @@
     "portscanner": "^2.2.0",
     "socket.io": "^2.2.0",
 	"tough-cookie": "^4.1.3"
+  },
+  "resolutions": {
+    "tough-cookie": "2.5.0"
   }
 }

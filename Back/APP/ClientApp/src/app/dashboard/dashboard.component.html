@@ -10,13 +10,16 @@
           <div class="card-body mt-5">
             <div>
               <div class="row">
+                <div class="nao-sincronizacao card-title" *ngIf="!this.sincronizarDTO?.id">
+                  Nenhuma sincronização encontrada!
+                </div>
                 <div class="table-responsive" *ngIf="this.sincronizarDTO?.id">
                   <table class="table">
                     <thead class="text-primary">
                       <th>#</th>
                       <th>Data ínicio</th>
                       <th>Status</th>
-                      <th>Data Fim</th>
+                      <th>Data fim</th>
                     </thead>
                     <tbody>
                       <tr>

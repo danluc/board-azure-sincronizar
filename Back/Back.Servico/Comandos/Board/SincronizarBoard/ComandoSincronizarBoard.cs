@@ -143,6 +143,7 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
                                 AND System.ChangedDate >= '{data} 00:00:00'
                                 AND ([System.WorkItemType] = '{Constantes.TIPO_ITEM_TASK}'
                                     OR [System.WorkItemType] = '{Constantes.TIPO_ITEM_BUG}'
+                                    OR [System.WorkItemType] = '{Constantes.TIPO_ITEM_ENABLER}'
                                     OR [System.WorkItemType] = '{Constantes.TIPO_ITEM_SOLICITACAO}')
                                 "
             };

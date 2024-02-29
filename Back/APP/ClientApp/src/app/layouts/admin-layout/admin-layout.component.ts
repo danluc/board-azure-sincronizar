@@ -8,6 +8,7 @@ import { NotificationHubService } from "app/core/services/NotificationHub.servic
 import { SincronizarControllerService } from "app/core/services/SincronizarController.service";
 import { DashboardComponent } from "app/dashboard/dashboard.component";
 import { MatSnackBar } from "@angular/material/snack-bar";
+declare var electron: any;
 
 @Component({
   selector: "app-admin-layout",
@@ -133,9 +134,12 @@ export class AdminLayoutComponent implements OnInit {
 
     try {
       this.startNotificationHubConnection();
-    } catch (error) {
-      
-    }
+    } catch (error) {}
+
+    window.onbeforeunload = (e) => {
+      e.returnValue = true;
+      electron.ipcRenderer.send("hideToSystemTray");
+    };
   }
   ngAfterViewInit() {
     this.runOnRouteChange();

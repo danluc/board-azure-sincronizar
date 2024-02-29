@@ -34,12 +34,7 @@
     ></script>
 
     <script>
-      const { ipcRenderer } = require("electron");
-
-      window.onbeforeunload = (e) => {
-        e.returnValue = true;
-        ipcRenderer.send("hideToSystemTray");
-      };
+      var electron = require("electron");
     </script>
   </body>
 </html>

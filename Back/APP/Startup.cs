@@ -11,6 +11,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Globalization;
+using System.IO;
 
 namespace APP
 {
@@ -51,7 +52,7 @@ namespace APP
             });
         }
 
-        private async void ElectronStatup()
+        private async void ElectronStatup(IWebHostEnvironment env)
         {
             var browserOptions = new BrowserWindowOptions
             {
@@ -59,17 +60,18 @@ namespace APP
                 Height = 900,
             };
 
-            var window = await Electron.WindowManager.CreateWindowAsync(browserOptions);
-
             //Menu
             var menu = new MenuItem[] { };
             Electron.Menu.SetApplicationMenu(menu);
+
+            var window = await Electron.WindowManager.CreateWindowAsync(browserOptions);
 
             //Mostrar DevTools
             bool devTools = Convert.ToBoolean(Configuration.GetSection("Electron:DevTools").Value ?? "false");
             if (devTools)
                 window.WebContents.OpenDevTools();
 
+            string absolutePath = Path.Combine(env.WebRootPath, "icone_1.ico");
 
             Electron.IpcMain.On("hideToSystemTray", (e) =>
             {
@@ -90,7 +92,7 @@ namespace APP
                         }
                     };
 
-                    Electron.Tray.Show(@"..\bin\wwwroot\icone.ico", menu);
+                    Electron.Tray.Show(absolutePath, menu);
                     Electron.Tray.SetToolTip("Sincronizar Board");
                 }
             });
@@ -106,7 +108,7 @@ namespace APP
 
             if (HybridSupport.IsElectronActive)
             {
-                ElectronStatup();
+                ElectronStatup(env);
             }
 
             app.UseSwagger();

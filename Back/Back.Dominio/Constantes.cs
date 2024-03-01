@@ -12,6 +12,7 @@
         public const string TIPO_ITEM_SOLICITACAO = "Solicitação";
         public const string TIPO_ITEM_HISTORIA = "User Story";
         public const string TIPO_ITEM_ENABLER = "Enabler";
+        public const string TIPO_ITEM_DEBITO = "Débito Técnico";
         #endregion
 
         #region NOTIFICACAO

@@ -143,11 +143,9 @@ namespace Back.Servico.Comandos.Board._Helpers
                 var descricaoServiceNow = item.Fields.FirstOrDefault(c => c.Key == "Custom.DescricaoServiceNow").Value?.ToString();
                 if (descricaoServiceNow != null)
                     AdicionarOperacao(patchDocument, operacao, "/fields/System.Description", descricaoServiceNow);
-
-                AdicionarOperacao(patchDocument, operacao, "/fields/System.WorkItemType", Constantes.TIPO_ITEM_HISTORIA);
             }
 
-            if (tipoTask == Constantes.TIPO_ITEM_ENABLER)
+            if (tipoTask == Constantes.TIPO_ITEM_ENABLER || tipoTask == Constantes.TIPO_ITEM_DEBITO || tipoTask == Constantes.TIPO_ITEM_SOLICITACAO)
                 AdicionarOperacao(patchDocument, operacao, "/fields/System.WorkItemType", Constantes.TIPO_ITEM_HISTORIA);
 
 

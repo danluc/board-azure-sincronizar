@@ -144,6 +144,7 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
                                 AND ([System.WorkItemType] = '{Constantes.TIPO_ITEM_TASK}'
                                     OR [System.WorkItemType] = '{Constantes.TIPO_ITEM_BUG}'
                                     OR [System.WorkItemType] = '{Constantes.TIPO_ITEM_ENABLER}'
+                                    OR [System.WorkItemType] = '{Constantes.TIPO_ITEM_DEBITO}'
                                     OR [System.WorkItemType] = '{Constantes.TIPO_ITEM_SOLICITACAO}')
                                 "
             };
@@ -171,8 +172,8 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
                 //Se não tem pai (historia) não vamos migrar
                 if (historiaId is null)
                 {
-                    //Verificar se é uma solicitação, ela não tem historia
-                    if (tipoTask == Constantes.TIPO_ITEM_SOLICITACAO)
+                    //Verificar se é uma solicitação/debito, ela não tem historia
+                    if (tipoTask == Constantes.TIPO_ITEM_SOLICITACAO || tipoTask == Constantes.TIPO_ITEM_DEBITO)
                         _itensSolicitacoes.Add(task);
 
                     continue;

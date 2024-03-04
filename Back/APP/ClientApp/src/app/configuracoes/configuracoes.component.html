@@ -3,7 +3,7 @@
     <div class="row">
       <div class="col-md-12">
         <div class="card">
-          <div class="card-header card-header-danger bg-laranja-evertec">
+          <div class="card-header card-header-danger bg-laranja">
             <h4 class="card-title">Editar configurações</h4>
             <p class="card-category"></p>
           </div>
@@ -24,7 +24,7 @@
                     <mat-hint>Buscar itens a parti da data atual menos {{ this.form.get("dia").value }} dia(s)</mat-hint>
                   </mat-form-field>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-3">
                   <mat-form-field class="example-full-width">
                     <input
                       matInput
@@ -37,19 +37,36 @@
                     />
                   </mat-form-field>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-3">
                   <mat-form-field class="example-full-width">
                     <input matInput formControlName="cliente" autocomplete="off" placeholder="Cliente" />
                   </mat-form-field>
                 </div>
               </div>
+              <div class="row mt-5">
+                <div class="col-md-6">
+                  <mat-form-field class="example-full-width">
+                    <input matInput formControlName="email" autocomplete="off" type="email" placeholder="E-mail" />
+                  </mat-form-field>
+                </div>
+                <div class="col-md-6">
+                  <mat-form-field class="example-full-width">
+                    <input matInput formControlName="senha" autocomplete="off" type="password" placeholder="Senha" />
+                  </mat-form-field>
+                </div>
+                <div class="col-md-6">
+                  <mat-form-field class="example-full-width">
+                    <input matInput formControlName="smtp" autocomplete="off" type="text" placeholder="SMTP" />
+                  </mat-form-field>
+                </div>
+                <div class="col-md-6">
+                  <mat-form-field class="example-full-width">
+                    <input matInput formControlName="porta" autocomplete="off" type="number" placeholder="Porta" />
+                  </mat-form-field>
+                </div>
+              </div>
 
-              <button
-                mat-raised-button
-                class="btn btn-danger bg-laranja-evertec pull-right mt-5"
-                (click)="this.salvar()"
-                [disabled]="this.carregando"
-              >
+              <button mat-raised-button class="btn btn-danger bg-laranja pull-right mt-5" (click)="this.salvar()" [disabled]="this.carregando">
                 {{ this.carregando ? "Salvando" : "Salvar" }}
               </button>
               <div class="clearfix"></div>

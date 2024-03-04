@@ -91,6 +91,7 @@ namespace Back.Servico.Comandos.Board._Helpers
         {
             var tipoTask = item.Fields["System.WorkItemType"].ToString();
             var patchDocument = new JsonPatchDocument();
+            string descricaoCompleta = "";
 
             AdicionarOperacao(patchDocument, operacao, "/fields/System.Title", $"{item.Id}: {item.Fields["System.Title"]}");
             AdicionarOperacao(patchDocument, operacao, "/fields/System.AreaId", areaId.ToString());
@@ -108,14 +109,10 @@ namespace Back.Servico.Comandos.Board._Helpers
             var descricao = item.Fields.FirstOrDefault(c => c.Key == "System.Description").Value;
             if (descricao != null)
             {
-                AdicionarOperacao(patchDocument, operacao, "/fields/System.Description", descricao.ToString());
-
+                descricaoCompleta = descricao.ToString();
                 var steps = item.Fields.FirstOrDefault(c => c.Key == "Microsoft.VSTS.TCM.ReproSteps").Value;
                 if (steps != null)
-                {
-                    var descricaoFinal = (descricao == null) ? steps.ToString() : $"{descricao} <br/> {steps}";
-                    AdicionarOperacao(patchDocument, operacao, "/fields/System.Description", descricaoFinal);
-                }
+                    descricaoCompleta += $"<br/> {steps}";
             }
 
             //Se for Task ou Bug vincula a uma historia
@@ -142,12 +139,8 @@ namespace Back.Servico.Comandos.Board._Helpers
             {
                 var descricaoServiceNow = item.Fields.FirstOrDefault(c => c.Key == "Custom.DescricaoServiceNow").Value?.ToString();
                 if (descricaoServiceNow != null)
-                    AdicionarOperacao(patchDocument, operacao, "/fields/System.Description", descricaoServiceNow);
+                    descricaoCompleta += $"<br/> {descricaoServiceNow}";
             }
-
-            if (tipoTask == Constantes.TIPO_ITEM_ENABLER || tipoTask == Constantes.TIPO_ITEM_DEBITO || tipoTask == Constantes.TIPO_ITEM_SOLICITACAO)
-                AdicionarOperacao(patchDocument, operacao, "/fields/System.WorkItemType", Constantes.TIPO_ITEM_HISTORIA);
-
 
             if (tipoTask == Constantes.TIPO_ITEM_HISTORIA)
             {
@@ -158,11 +151,10 @@ namespace Back.Servico.Comandos.Board._Helpers
 
                 var aceite = item.Fields.FirstOrDefault(c => c.Key == "Custom.88c5eab7-acc0-42bf-a522-614c59da35b0").Value?.ToString();
                 if (aceite != null)
-                {
-                    var descricaoFinal = (descricao == null) ? aceite.ToString() : $"{descricao} <br/> {aceite}";
-                    AdicionarOperacao(patchDocument, operacao, "/fields/System.Description", descricaoFinal);
-                }
+                    descricaoCompleta += $"<br/> {aceite}";
             }
+
+            AdicionarOperacao(patchDocument, operacao, "/fields/System.Description", descricaoCompleta);
 
             return patchDocument;
         }
@@ -183,6 +175,14 @@ namespace Back.Servico.Comandos.Board._Helpers
                 return "New";
 
             return motivo;
+        }
+
+        public static string RetornarTipoItem(string tipoTask)
+        {
+            if (tipoTask == Constantes.TIPO_ITEM_ENABLER || tipoTask == Constantes.TIPO_ITEM_DEBITO || tipoTask == Constantes.TIPO_ITEM_SOLICITACAO)
+                return Constantes.TIPO_ITEM_HISTORIA;
+            else
+                return tipoTask;
         }
     }
 }

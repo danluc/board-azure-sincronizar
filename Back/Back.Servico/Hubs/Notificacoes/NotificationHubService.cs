@@ -13,7 +13,8 @@ namespace Back.Servico.Hubs.Notificacoes
             _notificationHubContext = notificationHubContext;
         }
 
-        public async Task NotificarInicio() => await _notificationHubContext.Clients.Group(Constantes.NOTIFICACAO_GRUPO_LOCAL).SendAsync(Constantes.NOTIFICACAO_INICIO);
-        public async Task NotificarFim() => await _notificationHubContext.Clients.Group(Constantes.NOTIFICACAO_GRUPO_LOCAL).SendAsync(Constantes.NOTIFICACAO_PRONTA);
+        public async Task NotificarInicio() => await _notificationHubContext.Clients.All.SendAsync(Constantes.NOTIFICACAO_INICIO);
+        public async Task SincronizarInicio() => await _notificationHubContext.Clients.All.SendAsync(Constantes.NOTIFICACAO_SYNC_INICIO);
+        public async Task SincronizarFim() => await _notificationHubContext.Clients.All.SendAsync(Constantes.NOTIFICACAO_SYNC_FIM);
     }
 }

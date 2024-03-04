@@ -53,6 +53,8 @@ export class DashboardComponent implements OnInit {
         this.sincronizarDTO = res;
         if (this.sincronizarDTO.status == 1) {
           this.carregando = true;
+        }else{
+          this.carregando = false;
         }
       }
     } catch (error) {

@@ -1,12 +1,8 @@
-﻿using Back.Dominio;
-using Back.Dominio.Interfaces;
+﻿using Back.Dominio.Interfaces;
 using Back.Dominio.Models;
 using Back.Servico.Comandos.Configuracoes.CadastrarConfiguracao;
-using Back.Servico.Jobs;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using Quartz;
-using Quartz.Impl;
 using System;
 using System.Threading;
 using System.Threading.Tasks;

@@ -3,4 +3,8 @@ export class Configuracao {
   dia?: number;
   horaCron?: string;
   cliente?: string;
+  email?: string;
+  senha?: string;
+  smtp?: string;
+  porta?: number;
 }

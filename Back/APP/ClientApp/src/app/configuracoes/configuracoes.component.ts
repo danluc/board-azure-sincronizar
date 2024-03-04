@@ -31,6 +31,11 @@ export class ConfiguracoesComponent implements OnInit {
       dia: [this.configuracao?.dia, [Validators.maxLength(255), Validators.required]],
       cliente: [this.configuracao?.cliente, [Validators.maxLength(255)]],
       horaCron: [this.configuracao?.horaCron, [Validators.maxLength(10), Validators.required]],
+
+      email: [this.configuracao?.email, [Validators.maxLength(255)]],
+      senha: [this.configuracao?.senha, [Validators.maxLength(255)]],
+      smtp: [this.configuracao?.smtp, [Validators.maxLength(255)]],
+      porta: [this.configuracao?.porta, []],
     });
   }
 
@@ -44,6 +49,11 @@ export class ConfiguracoesComponent implements OnInit {
         this.form.get("dia").setValue(this.configuracao.dia);
         this.form.get("horaCron").setValue(this.configuracao.horaCron);
         this.form.get("cliente").setValue(this.configuracao.cliente);
+
+        this.form.get("email").setValue(this.configuracao.email);
+        this.form.get("senha").setValue(this.configuracao.senha);
+        this.form.get("smtp").setValue(this.configuracao.smtp);
+        this.form.get("porta").setValue(this.configuracao.porta);
       }
     } catch (error) {
       this.carregando = false;
@@ -52,7 +62,7 @@ export class ConfiguracoesComponent implements OnInit {
   }
 
   public async salvar(): Promise<void> {
-    if(this.form.invalid){
+    if (this.form.invalid) {
       return;
     }
     this.carregando = true;

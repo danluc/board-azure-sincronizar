@@ -1,8 +1,9 @@
-﻿using Back.Data.Repository;
+﻿using APP.Configuracoes.Cron;
+using Back.Data.Repository;
 using Back.Dominio.Interfaces;
 using Back.Dominio.Models;
+using Back.Servico.Email;
 using Back.Servico.Hubs.Notificacoes;
-using Back.Servico.Jobs;
 using Microsoft.Extensions.DependencyInjection;
 using Quartz;
 using Quartz.Impl;
@@ -32,11 +33,9 @@ namespace APP.Configuracoes
 
 
             #region SERVICOS
-            services.AddSingleton<IJobFactory, SingletonJobFactory>();
-            services.AddSingleton<ISchedulerFactory, StdSchedulerFactory>();
             services.AddScoped<NotificationHubService>();
             services.AddScoped<SincronizarCron>();
-            services.AddScoped<QuartzHostedService>();
+            services.AddScoped<EmailService>();
             #endregion
 
             return services;

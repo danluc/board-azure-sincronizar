@@ -1,9 +1,9 @@
-﻿using Back.Data.Context;
+﻿using APP.Configuracoes.Cron;
+using Back.Data.Context;
 using Back.Dominio;
 using Back.Dominio.Enum;
 using Back.Dominio.Interfaces;
 using Back.Dominio.Models;
-using Back.Servico.Jobs;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -14,11 +14,8 @@ using Microsoft.VisualStudio.Services.WebApi;
 using Quartz;
 using Quartz.Impl;
 using Serilog;
-using Swashbuckle.AspNetCore.Swagger;
 using System;
-using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace APP.Configuracoes

@@ -5,8 +5,6 @@ import PerfectScrollbar from "perfect-scrollbar";
 import * as $ from "jquery";
 import { filter, Subscription } from "rxjs";
 import { NotificationHubService } from "app/core/services/NotificationHub.service";
-import { SincronizarControllerService } from "app/core/services/SincronizarController.service";
-import { DashboardComponent } from "app/dashboard/dashboard.component";
 import { MatSnackBar } from "@angular/material/snack-bar";
 declare var electron: any;
 
@@ -20,12 +18,9 @@ export class AdminLayoutComponent implements OnInit {
   private lastPoppedUrl: string;
   private yScrollStack: number[] = [];
 
-  @ViewChild(DashboardComponent)
-  private _dashboardComponent: DashboardComponent;
 
   constructor(
     public location: Location,
-    private _sincronizarControllerService: SincronizarControllerService,
     private router: Router,
     private _notificationHubService: NotificationHubService,
     private _snackBar: MatSnackBar
@@ -132,10 +127,6 @@ export class AdminLayoutComponent implements OnInit {
       }
     });
 
-    try {
-      this.startNotificationHubConnection();
-    } catch (error) {}
-
     window.onbeforeunload = (e) => {
       e.returnValue = true;
       electron.ipcRenderer.send("hideToSystemTray");
@@ -172,35 +163,5 @@ export class AdminLayoutComponent implements OnInit {
       bool = true;
     }
     return bool;
-  }
-
-  startNotificationHubConnection() {
-    this._notificationHubService.startConnection();
-    this._notificationHubService.connection.on("SincronizacaoFim", () => {
-      this._sincronizarFim();
-    });
-
-    this._notificationHubService.connection.on("SincronizacaoInicio", () => {
-      this._sincronizarInicio();
-    });
-  }
-
-  private _sincronizarInicio(): void {
-    this._snackBar.open("Sincronização iniciada!", "Ok", {
-      duration: 3000,
-    });
-    try {
-      this._dashboardComponent.carregando = true;
-    } catch (error) {}
-  }
-
-  private _sincronizarFim(): void {
-    this._snackBar.open("Sincronização realizada!", "Ok", {
-      duration: 4000,
-    });
-    try {
-      this._dashboardComponent.carregando = false;
-      this._dashboardComponent.listaSincronizar();
-    } catch (error) {}
-  }
+  }  
 }

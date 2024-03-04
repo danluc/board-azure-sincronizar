@@ -21,7 +21,7 @@ export class NotificationHubService {
           nextRetryDelayInMilliseconds: () => 1000 + Math.random() * 100,
         })
         .withUrl(`${environment.apiUrl}hubs/notification`)
-        .configureLogging(SignalR.LogLevel.Trace)
+        .configureLogging(SignalR.LogLevel.Information)
         .build();
 
       this.connection

@@ -14,11 +14,18 @@
 		<PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
 		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.11.1" />
 		<PackageReference Include="Microsoft.AspNetCore.SignalR.Core" Version="1.1.0" />
+		<PackageReference Include="ElectronNET.API" Version="9.31.2" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\Back.Data\Back.Data.csproj" />
 		<ProjectReference Include="..\Back.Dominio\Back.Dominio.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Update="Recursos\EmailSincronizar.html">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
 	</ItemGroup>
 
 </Project>

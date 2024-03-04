@@ -3,16 +3,14 @@
     <div class="row">
       <div class="col-md-12">
         <div class="card">
-          <div class="card-header card-header-danger bg-laranja-evertec">
+          <div class="card-header card-header-danger bg-laranja">
             <h4 class="card-title">Sincronizar board</h4>
             <p class="card-category"></p>
           </div>
           <div class="card-body mt-5">
             <div>
               <div class="row">
-                <div class="nao-sincronizacao card-title" *ngIf="!this.sincronizarDTO?.id">
-                  Nenhuma sincronização encontrada!
-                </div>
+                <div class="nao-sincronizacao card-title" *ngIf="!this.sincronizarDTO?.id">Nenhuma sincronização encontrada!</div>
                 <div class="table-responsive" *ngIf="this.sincronizarDTO?.id">
                   <table class="table">
                     <thead class="text-primary">
@@ -34,10 +32,13 @@
                   </table>
                 </div>
               </div>
-
+              <div style="display: none">
+                <!--Gambiarra para fazer outro compoente simular o click quando for job-->
+                <a href="javascript:void(0)" (click)="this.listaSincronizar()" id="listar-sincronizar-board">Listar</a>
+              </div>
               <button
                 mat-raised-button
-                class="btn btn-danger bg-laranja-evertec pull-right mt-5"
+                class="btn btn-danger bg-laranja pull-right mt-5"
                 [disabled]="this.carregando"
                 (click)="this.sincronizar()"
               >

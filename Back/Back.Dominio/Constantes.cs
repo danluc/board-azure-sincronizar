@@ -17,8 +17,9 @@
 
         #region NOTIFICACAO
         public const string NOTIFICACAO_GRUPO_LOCAL = "GrupoLocal";
-        public const string NOTIFICACAO_INICIO = "SincronizacaoInicio";
-        public const string NOTIFICACAO_PRONTA = "SincronizacaoFim";
+        public const string NOTIFICACAO_INICIO = "SistemaIniciado";
+        public const string NOTIFICACAO_SYNC_INICIO = "SincronizacaoInicio";
+        public const string NOTIFICACAO_SYNC_FIM = "SincronizacaoFim";
         #endregion
 
 

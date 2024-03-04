@@ -66,6 +66,8 @@ namespace APP
 
             var window = await Electron.WindowManager.CreateWindowAsync(browserOptions);
 
+            Electron.IpcMain.Send(window, "Esta é uma mensagem do backend.", "Teste");
+
             //Mostrar DevTools
             bool devTools = Convert.ToBoolean(Configuration.GetSection("Electron:DevTools").Value ?? "false");
             if (devTools)
@@ -118,7 +120,7 @@ namespace APP
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "SINCRONIZAR BOARD");
                 c.RoutePrefix = "swagger";
             });
-
+            
             app.UseDeveloperExceptionPage();
             app.UseHttpsRedirection();
             app.UseSpaStaticFiles();
@@ -131,10 +133,6 @@ namespace APP
                 endpoints.MapHub<NotificationHub>("/api/hubs/notification");
             });
 
-            app.UseSignalR(configure =>
-            {
-                configure.MapHub<NotificationHub>("/api/hubs/notification");
-            });
 
             app.UseSpa(spa =>
             {

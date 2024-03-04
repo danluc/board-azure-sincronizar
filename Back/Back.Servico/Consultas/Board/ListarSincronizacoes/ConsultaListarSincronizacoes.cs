@@ -23,7 +23,7 @@ namespace Back.Servico.Consultas.Board.ListarSincronizacoes
         {
             try
             {
-                var dados = await _repositorioConsultaSincronizar.Query(readOnly: true).ToListAsync();
+                var dados = await _repositorioConsultaSincronizar.Query(readOnly: true, includes: new[] { "Itens" }).ToListAsync();
 
                 return new ResultadoListarSincronizacoes
                 {

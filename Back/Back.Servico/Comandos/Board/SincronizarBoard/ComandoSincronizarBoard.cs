@@ -28,6 +28,7 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
     class ComandoSincronizarBoard : IRequestHandler<ParametroSincronizarBoard, ResultadoSincronizarBoard>
     {
         private readonly IRepositorioComando<Sincronizar> _repositorioComandoSincronizar;
+        private readonly IRepositorioComando<SincronizarItem> _repositorioComandoSincronizarItem;
         private readonly IRepositorioConsulta<Sincronizar> _repositorioConsultaSincronizar;
         private readonly IRepositorioConsulta<Configuracao> _repositorioConsultaConfiguracao;
         private readonly IRepositorioConsulta<Conta> _repositorioConsultaConta;
@@ -39,10 +40,11 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
         private Conta _contaSecundaria;
         private Configuracao _configuracao;
         private int _areaId = 0;
-        private List<ItensEmailDTO> _itensEnviarEmail = new List<ItensEmailDTO>();
+        private List<SincronizarItem> _itensEnviarEmail = new List<SincronizarItem>();
 
         public ComandoSincronizarBoard(
             IRepositorioComando<Sincronizar> repositorioComandoSincronizar,
+            IRepositorioComando<SincronizarItem> repositorioComandoSincronizarItem,
             IRepositorioConsulta<Sincronizar> repositorioConsultaSincronizar,
             IRepositorioConsulta<Configuracao> repositorioConsultaConfiguracao,
             IRepositorioConsulta<Conta> repositorioConsultaConta,
@@ -52,6 +54,7 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
             )
         {
             _repositorioComandoSincronizar = repositorioComandoSincronizar;
+            _repositorioComandoSincronizarItem = repositorioComandoSincronizarItem;
             _repositorioConsultaSincronizar = repositorioConsultaSincronizar;
             _repositorioConsultaConfiguracao = repositorioConsultaConfiguracao;
             _repositorioConsultaConta = repositorioConsultaConta;
@@ -65,7 +68,7 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
         public async Task<ResultadoSincronizarBoard> Handle(ParametroSincronizarBoard request, CancellationToken cancellationToken)
         {
             //Envia a notificação para o front
-            var window = Electron.WindowManager.BrowserWindows?.First();
+            //var window = Electron.WindowManager.BrowserWindows?.First();
 
             var sincronizar = new Sincronizar { DataInicio = DateTime.Now, Status = (int)EStatusSincronizar.PROCESSANDO };
             try
@@ -77,9 +80,9 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
                     throw new Exception($"Nenhuma conta encontrada na base de dados");
 
                 #region REGISTRANDO_TABELA
-                await _repositorioComandoSincronizar.Insert(sincronizar);
+                var insert = await _repositorioComandoSincronizar.Insert(sincronizar);
                 await _repositorioComandoSincronizar.SaveChangesAsync();
-                Electron.IpcMain.Send(window, Constantes.NOTIFICACAO_SYNC_INICIO, Constantes.NOTIFICACAO_SYNC_INICIO);
+                //Electron.IpcMain.Send(window, Constantes.NOTIFICACAO_SYNC_INICIO, Constantes.NOTIFICACAO_SYNC_INICIO);
                 #endregion
 
                 _configuracao = await _repositorioConsultaConfiguracao.Query().FirstOrDefaultAsync();
@@ -100,13 +103,14 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
 
                 #region ATUALIZANDO_TABELA
                 await AtualizarUltimoSicronizar(EStatusSincronizar.CONCLUIDO);
+                await AtualizarSicronizarItens(insert.Id);
                 #endregion
 
 
                 //Atualizar historias fechadas
                 await AtualizarStatusHistorias();
 
-                Electron.IpcMain.Send(window, Constantes.NOTIFICACAO_SYNC_FIM, Constantes.NOTIFICACAO_SYNC_FIM);
+                //Electron.IpcMain.Send(window, Constantes.NOTIFICACAO_SYNC_FIM, Constantes.NOTIFICACAO_SYNC_FIM);
 
                 //Enviar email
                 if (Configuracao.VerificarSeExisteEmail(_configuracao) && _itensEnviarEmail.Count > 0)
@@ -124,7 +128,7 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
                 await AtualizarUltimoSicronizar(EStatusSincronizar.ERRO);
                 #endregion
 
-                Electron.IpcMain.Send(window, Constantes.NOTIFICACAO_SYNC_FIM, Constantes.NOTIFICACAO_SYNC_FIM);
+                //Electron.IpcMain.Send(window, Constantes.NOTIFICACAO_SYNC_FIM, Constantes.NOTIFICACAO_SYNC_FIM);
 
                 return new ResultadoSincronizarBoard
                 {
@@ -310,7 +314,7 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
                         await witClient.UpdateWorkItemAsync(patchDocument, resultado.Id.Value);
                     }
                     operation = Operation.Add;
-                    _itensEnviarEmail.Add(new ItensEmailDTO(tipoTask, item.Id, resultado.Id, "Criado"));
+                    _itensEnviarEmail.Add(new SincronizarItem(tipoTask, item.Id, resultado.Id, "Criado"));
                 }
                 else
                 {
@@ -319,7 +323,7 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
                     item.Fields["System.AssignedTo"] = itemTask.Fields.FirstOrDefault(c => c.Key == "System.AssignedTo").Value ?? _contaSecundaria.NomeUsuario;
                     var atualizarTask = SincronizarHelper.TratarObjeto(item, historiaId, _contaSecundaria, _areaId, Operation.Replace);
                     resultado = await witClient.UpdateWorkItemAsync(atualizarTask, itemTask.Id.Value);
-                    _itensEnviarEmail.Add(new ItensEmailDTO(tipoTask, item.Id, resultado.Id, "Atualizado"));
+                    _itensEnviarEmail.Add(new SincronizarItem(tipoTask, item.Id, resultado.Id, "Atualizado"));
                 }
 
                 //Se for bug, vamos atualizar os campos customizaveis
@@ -332,7 +336,7 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
             catch (Exception ex)
             {
                 _logger.LogError($"Resultado erro: {ex.Message}");
-                _itensEnviarEmail.Add(new ItensEmailDTO(tipoTask, item.Id, 0, $"Erro: {ex.Message}"));
+                _itensEnviarEmail.Add(new SincronizarItem(tipoTask, item.Id, 0, "Erro", $"Erro: {ex.Message}"));
                 return null;
             }
         }
@@ -396,6 +400,27 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
                 item.Status = (int)eStatus;
                 _repositorioComandoSincronizar.Update(item);
                 await _repositorioComandoSincronizar.SaveChangesAsync();
+            }
+            catch (Exception)
+            { }
+        }
+
+        private async Task AtualizarSicronizarItens(int sincronizarId)
+        {
+            try
+            {
+                var itens = _itensEnviarEmail.Select(e => new SincronizarItem
+                {
+                    Destino = e.Destino,
+                    Erro = e.Erro,
+                    Origem = e.Origem,
+                    Status = e.Status,
+                    Tipo = e.Tipo,
+                    SincronizarId = sincronizarId
+                });
+
+                _repositorioComandoSincronizarItem.UpdateRange(itens);
+                await _repositorioComandoSincronizarItem.SaveChangesAsync();
             }
             catch (Exception)
             { }

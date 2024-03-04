@@ -1,17 +1,18 @@
-import { NgModule } from '@angular/core';
-import { RouterModule } from '@angular/router';
-import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { AdminLayoutRoutes } from './admin-layout.routing';
-import { DashboardComponent } from '../../dashboard/dashboard.component';
-import { IconsComponent } from '../../icons/icons.component';
-import {MatButtonModule} from '@angular/material/button';
-import {MatInputModule} from '@angular/material/input';
-import {MatRippleModule} from '@angular/material/core';
-import {MatFormFieldModule} from '@angular/material/form-field';
-import {MatTooltipModule} from '@angular/material/tooltip';
-import {MatSelectModule} from '@angular/material/select';
-import { PipesModule } from 'app/core/pipe/pipes.module';
+import { NgModule } from "@angular/core";
+import { RouterModule } from "@angular/router";
+import { CommonModule } from "@angular/common";
+import { FormsModule, ReactiveFormsModule } from "@angular/forms";
+import { AdminLayoutRoutes } from "./admin-layout.routing";
+import { DashboardComponent } from "../../dashboard/dashboard.component";
+import { IconsComponent } from "../../icons/icons.component";
+import { MatButtonModule } from "@angular/material/button";
+import { MatInputModule } from "@angular/material/input";
+import { MatRippleModule } from "@angular/material/core";
+import { MatFormFieldModule } from "@angular/material/form-field";
+import { MatTooltipModule } from "@angular/material/tooltip";
+import { MatSelectModule } from "@angular/material/select";
+import { PipesModule } from "app/core/pipe/pipes.module";
+
 
 @NgModule({
   imports: [
@@ -25,12 +26,8 @@ import { PipesModule } from 'app/core/pipe/pipes.module';
     MatInputModule,
     MatSelectModule,
     MatTooltipModule,
-    PipesModule
+    PipesModule,
   ],
-  declarations: [
-    DashboardComponent,
-    IconsComponent,
-  ]
+  declarations: [DashboardComponent, IconsComponent],
 })
-
 export class AdminLayoutModule {}

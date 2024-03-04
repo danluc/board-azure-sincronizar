@@ -24,7 +24,7 @@ namespace Back.Servico.Consultas.Board.UltimaSincronizacao
         {
             try
             {
-                var dados = await _repositorioConsultaSincronizar.Query(readOnly: true).OrderByDescending(c => c.Id).FirstOrDefaultAsync();
+                var dados = await _repositorioConsultaSincronizar.Query(readOnly: true, includes: new[] { "Itens" }).OrderByDescending(c => c.Id).FirstOrDefaultAsync();
 
                 return new ResultadoUltimaSincronizacao
                 {

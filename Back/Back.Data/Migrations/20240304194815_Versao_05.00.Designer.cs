@@ -3,14 +3,16 @@ using System;
 using Back.Data.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Back.Data.Migrations
 {
     [DbContext(typeof(BancoDBContext))]
-    partial class BancoDBContextModelSnapshot : ModelSnapshot
+    [Migration("20240304194815_Versao_05.00")]
+    partial class Versao_0500
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

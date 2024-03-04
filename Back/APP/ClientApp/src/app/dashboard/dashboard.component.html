@@ -8,22 +8,18 @@
             <p class="card-category"></p>
           </div>
           <div class="card-body mt-5">
-            <div>
+            <div *ngIf="!this.mostrarItens">
               <div class="row">
                 <div class="nao-sincronizacao card-title" *ngIf="!this.sincronizarDTO?.id">Nenhuma sincronização encontrada!</div>
                 <div class="table-responsive" *ngIf="this.sincronizarDTO?.id">
                   <table class="table">
                     <thead class="text-primary">
-                      <th>#</th>
                       <th>Data ínicio</th>
                       <th>Status</th>
                       <th>Data fim</th>
                     </thead>
                     <tbody>
-                      <tr>
-                        <td>
-                          {{ this.sincronizarDTO.id }}
-                        </td>
+                      <tr (click)="alterarLista()">
                         <td>{{ this.sincronizarDTO.dataInicio | date : "dd/MM/yyyy HH:mm" }}</td>
                         <td class="text-primary">{{ this.sincronizarDTO.status | SincStatus }}</td>
                         <td>{{ this.sincronizarDTO.dataFim | date : "dd/MM/yyyy HH:mm" }}</td>
@@ -36,15 +32,33 @@
                 <!--Gambiarra para fazer outro compoente simular o click quando for job-->
                 <a href="javascript:void(0)" (click)="this.listaSincronizar()" id="listar-sincronizar-board">Listar</a>
               </div>
-              <button
-                mat-raised-button
-                class="btn btn-danger bg-laranja pull-right mt-5"
-                [disabled]="this.carregando"
-                (click)="this.sincronizar()"
-              >
+              <button mat-raised-button class="btn btn-danger bg-laranja pull-right mt-5" [disabled]="this.carregando" (click)="this.sincronizar()">
                 {{ this.carregando ? "Sincronizando" : "Sincronizar" }}
               </button>
               <div class="clearfix"></div>
+            </div>
+
+            <div class="row" *ngIf="this.mostrarItens">
+              <div class="table-responsive">
+                <table class="table">
+                  <thead class="text-primary">
+                    <th>Tipo</th>
+                    <th>Origem</th>
+                    <th>Destino</th>
+                    <th>Status</th>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let item of this.sincronizarDTO.itens; let i = index">
+                      <td>{{ item.tipo }}</td>
+                      <td>{{ item.origem }}</td>
+                      <td>{{ item.destino }}</td>
+                      <td class="text-primary" [matTooltip]="item.erro">{{ item.status }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <br />
+              <button mat-raised-button class="btn btn-danger bg-laranja pull-right mt-5" (click)="alterarLista()">Voltar</button>
             </div>
           </div>
         </div>

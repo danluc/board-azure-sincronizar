@@ -12,7 +12,7 @@ declare interface RouteInfo {
 export const ROUTES: RouteInfo[] = [
   { path: "/dashboard", title: "Sincronizar", icon: "dashboard", class: "" },
   { path: "/contas", title: "Contas", icon: "persons", class: "" },
-  { path: "/configuracoes", title: "Configurações", icon: "library_books", class: "" },
+  { path: "/configuracoes", title: "Configurações", icon: "settings", class: "" },
 ];
 declare var electron: any;
 

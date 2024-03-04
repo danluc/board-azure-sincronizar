@@ -13,6 +13,7 @@ namespace Back.Data.Context
         public virtual DbSet<Configuracao> Configuracoes { get; set; }
         public virtual DbSet<Conta> Contas { get; set; }
         public virtual DbSet<Sincronizar> Sincronizacoes { get; set; }
+        public virtual DbSet<SincronizarItem> SincronizarItens { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -29,6 +30,7 @@ namespace Back.Data.Context
             modelBuilder.ApplyConfiguration(new ConfiguracaoConfig());
             modelBuilder.ApplyConfiguration(new ContaConfig());
             modelBuilder.ApplyConfiguration(new SincronizarConfig());
+            modelBuilder.ApplyConfiguration(new SincronizarItemConfig());
         }
     }
 }

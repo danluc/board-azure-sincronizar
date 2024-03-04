@@ -13,6 +13,7 @@ import { Sincronizar } from "app/core/models/sincronizar";
 export class DashboardComponent implements OnInit {
   public singnalConectado: boolean = sessionStorage.getItem("SingnalConectado") == "true";
   public carregando: boolean = false;
+  public mostrarItens: boolean = false;
   public sincronizarDTO: Sincronizar;
   constructor(
     private _contasControllerService: ContasControllerService,
@@ -53,7 +54,7 @@ export class DashboardComponent implements OnInit {
         this.sincronizarDTO = res;
         if (this.sincronizarDTO.status == 1) {
           this.carregando = true;
-        }else{
+        } else {
           this.carregando = false;
         }
       }
@@ -87,5 +88,9 @@ export class DashboardComponent implements OnInit {
       this.carregando = false;
       this.listaSincronizar();
     }
+  }
+
+  public alterarLista(): void {
+    this.mostrarItens = !this.mostrarItens;
   }
 }

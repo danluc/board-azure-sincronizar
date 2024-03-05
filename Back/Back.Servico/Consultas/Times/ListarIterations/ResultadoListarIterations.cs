@@ -15,6 +15,6 @@ namespace Back.Servico.Consultas.Times.ListarIterations
             Mensagem = msg;
         }
 
-        public List<AreaDTO> Dados { get; set; }
+        public List<ListaSprintsDTO> Dados { get; set; }
     }
 }

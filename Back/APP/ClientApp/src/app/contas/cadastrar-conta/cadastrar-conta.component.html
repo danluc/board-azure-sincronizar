@@ -102,9 +102,14 @@
                     </div>
                     <div class="col-md-4">
                       <mat-form-field class="example-full-width">
+
                         <mat-select formControlName="sprint" placeholder="Sprint">
-                          <mat-option *ngFor="let item of this.sprints" [value]="item">{{ item.name }}</mat-option>
+                            <mat-optgroup *ngFor="let item of this.sprints; let i=index" [label]="item.time.name">
+                                <mat-option *ngFor="let sprint of item.sprints;" [value]="sprint">{{sprint.name}}</mat-option>
+                            </mat-optgroup>
                         </mat-select>
+
+                        
                       </mat-form-field>
                     </div>
                   </div>

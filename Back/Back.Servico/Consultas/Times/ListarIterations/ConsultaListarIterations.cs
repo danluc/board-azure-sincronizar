@@ -33,22 +33,31 @@ namespace Back.Servico.Consultas.Times.ListarIterations
                 WorkItemTrackingHttpClient witClient = connection.GetClient<WorkItemTrackingHttpClient>();
 
                 var iterationNodes = await witClient.GetClassificationNodeAsync(request.Dados.ProjetoNome, TreeStructureGroup.Iterations, depth: 2);
-
-                var listaInterations = iterationNodes.Children.FirstOrDefault(e => e.Name.ToUpper() == request.Dados.AreaNome.ToUpper());
-
-                var iterations = new List<AreaDTO>();
-                if (listaInterations.Children != null)
-                    iterations = listaInterations.Children.Select(e => new AreaDTO { Id = e.Identifier, Name = e.Name, Path = e.Path }).ToList();
-                else
+                var result = new List<ListaSprintsDTO>();
+                foreach (var item in iterationNodes?.Children)
                 {
-                    var area = new AreaDTO { Id = listaInterations.Identifier, Name = listaInterations.Name, Path = listaInterations.Path };
-                    iterations.Add(area);
+                    var sprint = new ListaSprintsDTO();
+                    sprint.Sprints = new List<AreaDTO>();
+                    sprint.Time = new AreaDTO(item.Identifier, item.Name, item.Path);
+                    if (item.HasChildren.Value)
+                    {
+                        foreach (var spr in item?.Children)
+                            sprint.Sprints.Add(new AreaDTO(spr.Identifier, spr.Name, spr.Path));
+                    }
+                    
+                    result.Add(sprint);
                 }
+
+                /*var listaInterations = iterationNodes.Children.Select(e => new ListaSprintsDTO
+                {
+                    Time = new AreaDTO(e.Identifier, e.Name, e.Path),
+                    Sprints = e?.Children.Select(c => new AreaDTO(c.Identifier, c.Name, c.Path)).ToList()
+                }).ToList();*/
 
                 return new ResultadoListarIterations
                 {
                     Sucesso = true,
-                    Dados = iterations
+                    Dados = result
                 };
             }
             catch (Exception ex)

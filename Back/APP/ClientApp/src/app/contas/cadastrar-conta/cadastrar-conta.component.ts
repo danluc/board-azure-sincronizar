@@ -3,6 +3,7 @@ import { FormBuilder, FormGroup, Validators } from "@angular/forms";
 import { MatSnackBar } from "@angular/material/snack-bar";
 import { Router } from "@angular/router";
 import { Conta } from "app/core/models/conta";
+import { ListaSprintsDTO } from "app/core/models/lista-sprintsDTO";
 import { BuscarIterationsDTO, BuscarProjetoDTO, TeamProjectReference } from "app/core/models/team-project-reference";
 import { ContasControllerService } from "app/core/services/ContasController.service";
 import { ProjetosControllerService } from "app/core/services/ProjetosController.service";
@@ -21,7 +22,7 @@ export class CadastrarContaComponent implements OnInit {
   public projetosSecundario: TeamProjectReference[] = [];
   public times: TeamProjectReference[] = [];
   public areas: TeamProjectReference[] = [];
-  public sprints: TeamProjectReference[] = [];
+  public sprints: ListaSprintsDTO[] = [];
   public contaAtualizar: Conta[] = [];
   public textoCarregando: string = "Buscando contas...";
 
@@ -194,8 +195,12 @@ export class CadastrarContaComponent implements OnInit {
       this.sprints = res.dados;
 
       if (!this.cadastrar) {
-        let ps = res.dados.find((e) => e.path == this.contaAtualizar[1].sprint);
-        this.form.get("sprint").setValue(ps);
+        try {
+          let ps = this.sprints.map((e) => e.sprints);
+          let sprint = ps.find((c) => c.find((e) => e.path == this.contaAtualizar[1].sprint));
+          let spr = sprint.find((c) => c.path == this.contaAtualizar[1].sprint);
+          this.form.get("sprint").setValue(spr);
+        } catch (error) {}
       }
     } catch (error) {
       this.carregando = false;

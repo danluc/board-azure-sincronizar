@@ -263,10 +263,15 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
             }
 
             //cadastra solicitação/enable
-            foreach (var solicitacao in _itensSemParente)
+            if(_itensSemParente.Count > 0)
             {
-                var resultado = await CadastrarItem(connection, solicitacao, witClient, 0);
-                _logger.LogInformation($"Resultado _itensSemParente: {resultado?.Id}");
+                var historiasId = historias.Select(c => c.Historia.Id).ToList();
+                _itensSemParente = _itensSemParente.Where(c => !historiasId.Contains(c.Id)).ToList();
+                foreach (var solicitacao in _itensSemParente)
+                {
+                    var resultado = await CadastrarItem(connection, solicitacao, witClient, 0);
+                    _logger.LogInformation($"Resultado _itensSemParente: {resultado?.Id}");
+                }
             }
         }
 
@@ -302,9 +307,9 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
                 if (itemTask is null)
                 {
                     _logger.LogInformation($"Fluxo cadastrar {tipoTask} - {item.Id}");
-                    tipoTask = SincronizarHelper.RetornarTipoItem(tipoTask);
+                    var ntipoTask = SincronizarHelper.RetornarTipoItem(tipoTask);
                     var novoItemTask = SincronizarHelper.TratarObjeto(item, historiaId, _contaSecundaria, _areaId);
-                    resultado = await witClient.CreateWorkItemAsync(novoItemTask, Guid.Parse(_contaSecundaria.ProjetoId), tipoTask);
+                    resultado = await witClient.CreateWorkItemAsync(novoItemTask, Guid.Parse(_contaSecundaria.ProjetoId), ntipoTask);
                     //Não pode criar um item ja com status ativo, então cria como novo e logo atualiza
                     if (status != Constantes.STATUS_NOVO)
                     {

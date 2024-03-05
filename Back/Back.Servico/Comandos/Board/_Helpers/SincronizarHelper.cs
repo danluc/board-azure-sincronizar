@@ -64,10 +64,10 @@ namespace Back.Servico.Comandos.Board._Helpers
                //{"Removido",     "Blocked"},
 
                //SOLICITAÇÃO
-               {"WIP",      "Active"},
-               {"Blocked",  "Blocked"},
-               {"Resolved", "Closed"},
-               {"Canceled", "Blocked"},
+               {"WIP",      "inDesign"},
+               {"Blocked",  "clientDone"},
+               {"Resolved", "clientDone"},
+               {"Canceled", "Removed"},
             };
 
             return Status;

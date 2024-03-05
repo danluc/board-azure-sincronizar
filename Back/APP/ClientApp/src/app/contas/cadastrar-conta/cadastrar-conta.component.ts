@@ -50,7 +50,7 @@ export class CadastrarContaComponent implements OnInit {
       projetoSecundario: ["", [Validators.required]],
       time: ["", [Validators.required]],
       areaPath: ["", [Validators.required]],
-      sprint: ["", []],
+      sprint: ["", [Validators.required]],
     });
   }
 

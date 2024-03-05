@@ -1,6 +1,5 @@
 ﻿using Back.Dominio.DTO;
 using Back.Dominio.DTO.Areas;
-using Microsoft.TeamFoundation.Work.WebApi;
 using System.Collections.Generic;
 
 namespace Back.Servico.Consultas.Times.ListarAreas
@@ -16,6 +15,6 @@ namespace Back.Servico.Consultas.Times.ListarAreas
             Mensagem = msg;
         }
 
-        public List<TeamSettingsIteration> Dados { get; set; }
+        public List<AreaDTO> Dados { get; set; }
     }
 }

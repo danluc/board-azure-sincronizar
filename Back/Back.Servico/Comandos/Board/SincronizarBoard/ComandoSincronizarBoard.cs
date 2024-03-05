@@ -68,7 +68,7 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
         public async Task<ResultadoSincronizarBoard> Handle(ParametroSincronizarBoard request, CancellationToken cancellationToken)
         {
             //Envia a notificação para o front
-            //var window = Electron.WindowManager.BrowserWindows?.First();
+            var window = Electron.WindowManager.BrowserWindows?.First();
 
             var sincronizar = new Sincronizar { DataInicio = DateTime.Now, Status = (int)EStatusSincronizar.PROCESSANDO };
             try
@@ -80,9 +80,9 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
                     throw new Exception($"Nenhuma conta encontrada na base de dados");
 
                 #region REGISTRANDO_TABELA
-                var insert = await _repositorioComandoSincronizar.Insert(sincronizar);
+                await _repositorioComandoSincronizar.Insert(sincronizar);
                 await _repositorioComandoSincronizar.SaveChangesAsync();
-                //Electron.IpcMain.Send(window, Constantes.NOTIFICACAO_SYNC_INICIO, Constantes.NOTIFICACAO_SYNC_INICIO);
+                Electron.IpcMain.Send(window, Constantes.NOTIFICACAO_SYNC_INICIO, Constantes.NOTIFICACAO_SYNC_INICIO);
                 #endregion
 
                 _configuracao = await _repositorioConsultaConfiguracao.Query().FirstOrDefaultAsync();
@@ -103,14 +103,13 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
 
                 #region ATUALIZANDO_TABELA
                 await AtualizarUltimoSicronizar(EStatusSincronizar.CONCLUIDO);
-                await AtualizarSicronizarItens(insert.Id);
                 #endregion
 
 
                 //Atualizar historias fechadas
                 await AtualizarStatusHistorias();
 
-                //Electron.IpcMain.Send(window, Constantes.NOTIFICACAO_SYNC_FIM, Constantes.NOTIFICACAO_SYNC_FIM);
+                Electron.IpcMain.Send(window, Constantes.NOTIFICACAO_SYNC_FIM, Constantes.NOTIFICACAO_SYNC_FIM);
 
                 //Enviar email
                 if (Configuracao.VerificarSeExisteEmail(_configuracao) && _itensEnviarEmail.Count > 0)
@@ -128,7 +127,7 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
                 await AtualizarUltimoSicronizar(EStatusSincronizar.ERRO);
                 #endregion
 
-                //Electron.IpcMain.Send(window, Constantes.NOTIFICACAO_SYNC_FIM, Constantes.NOTIFICACAO_SYNC_FIM);
+               Electron.IpcMain.Send(window, Constantes.NOTIFICACAO_SYNC_FIM, Constantes.NOTIFICACAO_SYNC_FIM);
 
                 return new ResultadoSincronizarBoard
                 {
@@ -400,6 +399,8 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
                 item.Status = (int)eStatus;
                 _repositorioComandoSincronizar.Update(item);
                 await _repositorioComandoSincronizar.SaveChangesAsync();
+
+                await AtualizarSicronizarItens(item.Id);
             }
             catch (Exception)
             { }

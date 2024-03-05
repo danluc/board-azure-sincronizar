@@ -11,7 +11,7 @@
             <div *ngIf="!this.mostrarItens">
               <div class="row">
                 <div class="nao-sincronizacao card-title" *ngIf="!this.sincronizarDTO?.id">Nenhuma sincronização encontrada!</div>
-                <div class="table-responsive" *ngIf="this.sincronizarDTO?.id">
+                <div class="table-responsive" style="cursor: pointer;" *ngIf="this.sincronizarDTO?.id">
                   <table class="table">
                     <thead class="text-primary">
                       <th>Data ínicio</th>

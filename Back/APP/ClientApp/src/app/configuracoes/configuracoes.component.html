@@ -21,7 +21,7 @@
                       type="number"
                       placeholder="Dia(s) para buscar itens"
                     />
-                    <mat-hint>Buscar itens a parti da data atual menos {{ this.form.get("dia").value }} dia(s)</mat-hint>
+                    <mat-hint>Buscar itens a partir da data atual menos {{ this.form.get("dia").value }} dia(s)</mat-hint>
                   </mat-form-field>
                 </div>
                 <div class="col-md-3">
@@ -30,7 +30,7 @@
                       matInput
                       formControlName="horaCron"
                       autocomplete="off"
-                      placeholder="Horário job sincronizar"
+                      placeholder="Horário job"
                       [showMaskTyped]="true"
                       [dropSpecialCharacters]="false"
                       [mask]="'00:00'"

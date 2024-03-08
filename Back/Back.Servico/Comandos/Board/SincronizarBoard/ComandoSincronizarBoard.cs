@@ -4,8 +4,6 @@ using Back.Dominio.Enum;
 using Back.Dominio.Interfaces;
 using Back.Dominio.Models;
 using Back.Servico.Comandos.Board._Helpers;
-using Back.Servico.Email;
-using Back.Servico.Hubs.Notificacoes;
 using ElectronNET.API;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -34,7 +32,6 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
         private readonly IRepositorioConsulta<Conta> _repositorioConsultaConta;
         private readonly ILogger<ComandoSincronizarBoard> _logger;
         private readonly IConfiguration _configuration;
-        private readonly EmailService _emailService;
         private List<WorkItem> _itensSemParente;
         private Conta _contaPrincipal;
         private Conta _contaSecundaria;
@@ -49,9 +46,7 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
             IRepositorioConsulta<Configuracao> repositorioConsultaConfiguracao,
             IRepositorioConsulta<Conta> repositorioConsultaConta,
             ILogger<ComandoSincronizarBoard> logger,
-            IConfiguration configuration,
-            EmailService emailService
-            )
+            IConfiguration configuration            )
         {
             _repositorioComandoSincronizar = repositorioComandoSincronizar;
             _repositorioComandoSincronizarItem = repositorioComandoSincronizarItem;
@@ -60,7 +55,6 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
             _repositorioConsultaConta = repositorioConsultaConta;
             _logger = logger;
             _configuration = configuration;
-            _emailService = emailService;
             _itensSemParente = new List<WorkItem>();
         }
 
@@ -68,13 +62,13 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
         public async Task<ResultadoSincronizarBoard> Handle(ParametroSincronizarBoard request, CancellationToken cancellationToken)
         {
             //Envia a notificação para o front
-            var window = Electron.WindowManager.BrowserWindows?.First();
+           /* var window = Electron.WindowManager.BrowserWindows?.First();
 
-            var sincronizar = new Sincronizar { DataInicio = DateTime.Now, Status = (int)EStatusSincronizar.PROCESSANDO };
+            var sincronizar = new Sincronizar { DataInicio = DateTime.Now, Status = (int)EStatusSincronizar.PROCESSANDO };*/
             try
             {
                 //Busca as contas
-                var contas = await _repositorioConsultaConta.Query().ToListAsync();
+               /* var contas = await _repositorioConsultaConta.Query().ToListAsync();
 
                 if (contas.Count == 0)
                     throw new Exception($"Nenhuma conta encontrada na base de dados");
@@ -114,7 +108,7 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
                 //Enviar email
                 if (Configuracao.VerificarSeExisteEmail(_configuracao) && _itensEnviarEmail.Count > 0)
                     _emailService.EmailSeincronizar(_configuracao, CorpoEmail(), _contaSecundaria.NomeUsuario);
-
+               */
 
                 return new ResultadoSincronizarBoard
                 {
@@ -127,7 +121,7 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
                 await AtualizarUltimoSicronizar(EStatusSincronizar.ERRO);
                 #endregion
 
-               Electron.IpcMain.Send(window, Constantes.NOTIFICACAO_SYNC_FIM, Constantes.NOTIFICACAO_SYNC_FIM);
+              // Electron.IpcMain.Send(window, Constantes.NOTIFICACAO_SYNC_FIM, Constantes.NOTIFICACAO_SYNC_FIM);
 
                 return new ResultadoSincronizarBoard
                 {
@@ -142,7 +136,7 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
             //Resultado
             var historias = new List<ItensSicronizarDTO>();
             //Faz conexão com o azure
-            var connection = new VssConnection(new Uri(_contaPrincipal.UrlCorporacao), new VssBasicCredential(string.Empty, _contaPrincipal.Token));
+           /* var connection = new VssConnection(new Uri(_contaPrincipal.UrlCorporacao), new VssBasicCredential(string.Empty, _contaPrincipal.Token));
             var witClient = connection.GetClient<WorkItemTrackingHttpClient>();
             //Filtro data
             var data = DateTime.Now.AddDays(-_configuracao.Dia).Date.ToString("yyyy-MM-dd");
@@ -233,7 +227,7 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
                 {
                     historias.Add(migrar);
                 }
-            }
+            }*/
 
             return historias;
         }
@@ -241,7 +235,7 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
         private async Task EnviarTaskDestino(List<ItensSicronizarDTO> historias)
         {
             //Faz conexão com o azure
-            VssConnection connection = new VssConnection(new Uri(_contaSecundaria.UrlCorporacao), new VssBasicCredential(string.Empty, _contaSecundaria.Token));
+           /* VssConnection connection = new VssConnection(new Uri(_contaSecundaria.UrlCorporacao), new VssBasicCredential(string.Empty, _contaSecundaria.Token));
 
             WorkItemTrackingHttpClient witClient = connection.GetClient<WorkItemTrackingHttpClient>();
 
@@ -272,12 +266,12 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
                     var resultado = await CadastrarItem(connection, solicitacao, witClient, 0);
                     _logger.LogInformation($"Resultado _itensSemParente: {resultado?.Id}");
                 }
-            }
+            }*/
         }
 
         private async Task<int?> BuscarArea(WorkItemTrackingHttpClient witClient)
         {
-            var areasNode = await witClient.GetClassificationNodeAsync(_contaSecundaria.ProjetoNome, TreeStructureGroup.Areas, depth: 2);
+            /*var areasNode = await witClient.GetClassificationNodeAsync(_contaSecundaria.ProjetoNome, TreeStructureGroup.Areas, depth: 2);
 
             if (areasNode.Children is null)
                 return areasNode.Id;
@@ -290,21 +284,22 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
             if (listaAreas.Children != null)
                 return listaAreas.Children.FirstOrDefault(e => e.Name.ToUpper() == _contaSecundaria.AreaPath.ToUpper())?.Id;
             else
-                return listaAreas.Id;
+                return listaAreas.Id;*/
+            return 1;
         }
 
         private async Task<WorkItem> CadastrarItem(VssConnection connection, WorkItem item, WorkItemTrackingHttpClient witClient, int historiaId)
         {
             WorkItem resultado = new WorkItem();
-            var itemTask = await VerificarSeItemExisteNoDestino(connection, item.Id.Value);
+           /* var itemTask = await VerificarSeItemExisteNoDestino(connection, item.Id.Value);
             var tipoTask = item.Fields["System.WorkItemType"].ToString();
             var status = item.Fields["System.State"].ToString();
-            var operation = Operation.Replace;
+            var operation = Operation.Replace;*/
 
             try
             {
                 //Se não existir, vamos criar
-                if (itemTask is null)
+                /*if (itemTask is null)
                 {
                     _logger.LogInformation($"Fluxo cadastrar {tipoTask} - {item.Id}");
                     var ntipoTask = SincronizarHelper.RetornarTipoItem(tipoTask);
@@ -334,13 +329,12 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
                 if (tipoTask == Constantes.TIPO_ITEM_BUG)
                     await CamposCustomizaveis(resultado, witClient, operation, item);
 
-                _logger.LogInformation($"Resultado: {resultado.Id}, tipo: {tipoTask}");
+                _logger.LogInformation($"Resultado: {resultado.Id}, tipo: {tipoTask}");*/
                 return resultado;
             }
             catch (Exception ex)
             {
                 _logger.LogError($"Resultado erro: {ex.Message}");
-                _itensEnviarEmail.Add(new SincronizarItem(tipoTask, item.Id, 0, "Erro", $"Erro: {ex.Message}"));
                 return null;
             }
         }
@@ -351,7 +345,7 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
             {
                 JsonPatchDocument patchDocument = new JsonPatchDocument();
 
-                //Se tiver cliente cadastrado
+                /*//Se tiver cliente cadastrado
                 if (!string.IsNullOrEmpty(_configuracao.Cliente))
                     SincronizarHelper.AdicionarOperacao(patchDocument, operacao, "/fields/Custom.Cliente", _configuracao.Cliente);
 
@@ -371,7 +365,7 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
                     });
                 }
 
-                await witClient.UpdateWorkItemAsync(patchDocument, item.Id.Value);
+                await witClient.UpdateWorkItemAsync(patchDocument, item.Id.Value);*/
             }
             catch (Exception ex)
             {
@@ -435,7 +429,7 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
         private async Task AtualizarStatusHistorias()
         {
             //Faz conexão com o azure
-            VssConnection connection1 = new VssConnection(new Uri(_contaPrincipal.UrlCorporacao), new VssBasicCredential(string.Empty, _contaPrincipal.Token));
+            /*VssConnection connection1 = new VssConnection(new Uri(_contaPrincipal.UrlCorporacao), new VssBasicCredential(string.Empty, _contaPrincipal.Token));
             VssConnection conectDestino = new VssConnection(new Uri(_contaSecundaria.UrlCorporacao), new VssBasicCredential(string.Empty, _contaSecundaria.Token));
 
             //Filtro data
@@ -485,7 +479,7 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
                     SincronizarHelper.AdicionarOperacao(patchDocument, Operation.Replace, "/fields/System.State", SincronizarHelper.BuscarStatusItem(status));
                     await witClientDestino.UpdateWorkItemAsync(patchDocument, historia.Id.Value);
                 }
-            }
+            }*/
         }
 
         private string CorpoEmail()

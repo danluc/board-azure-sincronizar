@@ -5,9 +5,7 @@ namespace Back.Dominio.DTO.Areas
     public class AreaDTO
     {
         public AreaDTO()
-        {
-
-        }
+        { }
 
         public AreaDTO(Guid id, string name, string path)
         {

@@ -1,13 +1,9 @@
 export class Conta {
   id?: number;
-  token?: string;
-  nomeUsuario?: string;
-  urlCorporacao?: string;
-  projetoNome?: string;
-  timeNome?: string;
-  timeId?: string;
-  projetoId?: string;
-  areaPath?: string;
+  emailDe?: string;
+  emailPara?: string;
+  areaId?: number;
+  reaPath?: string;
   sprint?: string;
-  principal?: boolean;
+  cliente?: string;
 }

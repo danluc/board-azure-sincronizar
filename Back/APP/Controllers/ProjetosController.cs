@@ -23,7 +23,7 @@ namespace APP.Controllers
             if (!result.Sucesso)
                 return BadRequest(result.Mensagem);
 
-            return Ok(result);
+            return Ok(result.Projetos);
         }
     }
 }

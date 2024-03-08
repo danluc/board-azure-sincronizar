@@ -15,7 +15,7 @@ export class ConfiguracoesControllerService extends BaseControllerService {
     }
 
     public lista(): Observable<any> {
-        return this.get<any>(`Configuracoes`);
+        return this.get<Configuracao[]>(`Configuracoes`);
     }
 
     public cadastrar(dados: Configuracao[]): Observable<any> {

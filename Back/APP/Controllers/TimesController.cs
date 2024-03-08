@@ -26,7 +26,7 @@ namespace APP.Controllers
             if (!result.Sucesso)
                 return BadRequest(result.Mensagem);
 
-            return Ok(result);
+            return Ok(result.Dados);
         }
 
         [HttpPost("BuscarAreas")]
@@ -36,7 +36,7 @@ namespace APP.Controllers
             if (!result.Sucesso)
                 return BadRequest(result.Mensagem);
 
-            return Ok(result);
+            return Ok(result.Dados);
         }
 
         [HttpPost("BuscarSprint")]
@@ -46,7 +46,7 @@ namespace APP.Controllers
             if (!result.Sucesso)
                 return BadRequest(result.Mensagem);
 
-            return Ok(result);
+            return Ok(result.Dados);
         }
     }
 }

@@ -91,7 +91,7 @@ namespace Back.Servico.Comandos.Board._Helpers
         {
             var tipoTask = item.Fields["System.WorkItemType"].ToString();
             var patchDocument = new JsonPatchDocument();
-            string descricaoCompleta = "";
+            /*string descricaoCompleta = "";
 
             AdicionarOperacao(patchDocument, operacao, "/fields/System.Title", $"{item.Id}: {item.Fields["System.Title"]}");
             AdicionarOperacao(patchDocument, operacao, "/fields/System.AreaId", areaId.ToString());
@@ -155,7 +155,7 @@ namespace Back.Servico.Comandos.Board._Helpers
             }
 
             AdicionarOperacao(patchDocument, operacao, "/fields/System.Description", descricaoCompleta);
-
+           */
             return patchDocument;
         }
 

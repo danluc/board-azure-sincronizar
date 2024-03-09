@@ -4,9 +4,8 @@ import { MatSnackBar } from "@angular/material/snack-bar";
 import { Router } from "@angular/router";
 import { Conta } from "app/core/models/conta";
 import { ListaSprintsDTO } from "app/core/models/lista-sprintsDTO";
-import { BuscarIterationsDTO, BuscarProjetoDTO, TeamProjectReference } from "app/core/models/team-project-reference";
+import { TeamProjectReference } from "app/core/models/team-project-reference";
 import { ContasControllerService } from "app/core/services/ContasController.service";
-import { ProjetosControllerService } from "app/core/services/ProjetosController.service";
 import { TimesControllerService } from "app/core/services/TimesController.service";
 
 @Component({
@@ -28,7 +27,6 @@ export class CadastrarContaComponent implements OnInit {
 
   constructor(
     private _contasControllerService: ContasControllerService,
-    private _projetosControllerService: ProjetosControllerService,
     private _timesControllerService: TimesControllerService,
     private _formBuilder: FormBuilder,
     private _router: Router,
@@ -38,170 +36,54 @@ export class CadastrarContaComponent implements OnInit {
   ngOnInit() {
     this._formularioCad();
     this._buscarContas();
+    this.buscarAreas();
+    this.buscarSprint();
   }
 
   private _formularioCad(): void {
     this.form = this._formBuilder.group({
-      tokenPrincipal: ["", [Validators.required]],
-      urlPrincipal: ["", [Validators.required]],
-      projetoPrincipal: ["", [Validators.required]],
-      tokenSecundario: ["", [Validators.required]],
-      urlSecundario: ["", [Validators.required]],
-      nomeSecundario: ["", [Validators.required]],
-      projetoSecundario: ["", [Validators.required]],
-      time: ["", [Validators.required]],
+      emailDe: ["", [Validators.required]],
+      emailPara: ["", [Validators.required]],
+      areaId: ["", [Validators.required]],
       areaPath: ["", [Validators.required]],
       sprint: ["", [Validators.required]],
+      cliente: ["", [Validators.required]],
     });
   }
 
   private async _buscarContas(): Promise<void> {
     this.carregando = true;
     const res = await this._contasControllerService.lista().toPromise();
-    this.carregando = false;
-    if (res.dados.length == 0) {
-      return;
-    }
-    this.contaAtualizar = res.dados;
-    this.cadastrar = false;
-    this.form.get("tokenPrincipal").setValue(this.contaAtualizar[0].token);
-    this.form.get("urlPrincipal").setValue(this.contaAtualizar[0].urlCorporacao);
-    this.buscarProjetos();
-
-    this.form.get("tokenSecundario").setValue(this.contaAtualizar[1].token);
-    this.form.get("urlSecundario").setValue(this.contaAtualizar[1].urlCorporacao);
-    this.buscarProjetos(false);
-
-    this.form.get("nomeSecundario").setValue(this.contaAtualizar[1].nomeUsuario);
-  }
-
-  public async buscarProjetos(principal: boolean = true): Promise<void> {
-    let url = "";
-    let token = "";
-
-    if (principal) {
-      url = this.form.get("urlPrincipal").value;
-      token = this.form.get("tokenPrincipal").value;
-    } else {
-      url = this.form.get("urlSecundario").value;
-      token = this.form.get("tokenSecundario").value;
-    }
-
-    if (url.length <= 1 || token.length <= 1) {
-      return;
-    }
-
-    this.carregando = true;
-    this.textoCarregando = "Buscando projetos...";
-
-    try {
-      let dados: BuscarProjetoDTO = { token: token, url: url };
-      const res = await this._projetosControllerService.lista(dados).toPromise();
-      this.carregando = false;
-      if (principal) {
-        this.projetosPrincipal = res.projetos;
-
-        if (!this.cadastrar) {
-          let p = res.projetos.find((e) => e.id == this.contaAtualizar[0].projetoId);
-          this.form.get("projetoPrincipal").setValue(p);
-        }
-      } else {
-        this.projetosSecundario = res.projetos;
-
-        if (!this.cadastrar) {
-          let ps = res.projetos.find((e) => e.id == this.contaAtualizar[1].projetoId);
-          this.form.get("projetoSecundario").setValue(ps);
-          this.buscarTimes();
-        }
-      }
-    } catch (error) {
-      this.carregando = false;
-    }
-  }
-
-  public async buscarTimes(): Promise<void> {
-    let url = this.form.get("urlSecundario").value;
-    let token = this.form.get("tokenSecundario").value;
-    let projeto = this.form.get("projetoSecundario").value;
-    if (url.length <= 1 || token.length <= 1 || projeto?.name?.length <= 1) {
-      return;
-    }
-
-    this.carregando = true;
-    this.textoCarregando = "Buscando times...";
-
-    try {
-      let dados: BuscarProjetoDTO = { token: token, url: url };
-      const res = await this._timesControllerService.lista(projeto.name, dados).toPromise();
-      this.carregando = false;
-      this.times = res.dados;
-
-      if (!this.cadastrar) {
-        let ps = res.dados.find((e) => e.id == this.contaAtualizar[1].timeId);
-        this.form.get("time").setValue(ps);
-        this.buscarAreas();
-      }
-    } catch (error) {
-      this.carregando = false;
-    }
+    console.log(res);
   }
 
   public async buscarAreas(): Promise<void> {
-    let url = this.form.get("urlSecundario").value;
-    let token = this.form.get("tokenSecundario").value;
-    let projeto = this.form.get("projetoSecundario").value;
-    let time = this.form.get("time").value;
-
-    if (url.length <= 1 || token.length <= 1 || projeto?.name?.length <= 1 || time?.name?.length <= 1) {
-      return;
-    }
-
     this.carregando = true;
     this.textoCarregando = "Buscando areas...";
 
     try {
-      let dados: BuscarIterationsDTO = { token: token, url: url, projetoNome: projeto.name, timeNome: time.name };
-      const res = await this._timesControllerService.listaAreas(dados).toPromise();
+      const res = await this._timesControllerService.listaAreas().toPromise();
       this.carregando = false;
       this.areas = res.dados;
-
-      if (!this.cadastrar) {
-        let ps = res.dados.find((e) => e.name == this.contaAtualizar[1].areaPath);
-        this.form.get("areaPath").setValue(ps);
-        this.buscarSprint();
-      }
+      console.log(res);
     } catch (error) {
       this.carregando = false;
+      this._snackBar.open("Problema para acessar a azure com as credenciais", "Fechar", {
+        duration: 3000,
+      });
+      this._router.navigate(["/azure"]);
     }
   }
 
   public async buscarSprint(): Promise<void> {
-    let url = this.form.get("urlSecundario").value;
-    let token = this.form.get("tokenSecundario").value;
-    let projeto = this.form.get("projetoSecundario").value;
-    let areaPath = this.form.get("areaPath").value;
-
-    if (url.length <= 1 || token.length <= 1 || projeto?.name?.length <= 1 || areaPath?.name?.length <= 1) {
-      return;
-    }
-
     this.carregando = true;
     this.textoCarregando = "Buscando sprint...";
     this.sprints = [];
     try {
-      let dados: BuscarIterationsDTO = { token: token, url: url, projetoNome: projeto.name, areaNome: areaPath.name };
-      const res = await this._timesControllerService.listaSprint(dados).toPromise();
+      const res = await this._timesControllerService.listaSprint().toPromise();
       this.carregando = false;
       this.sprints = res.dados;
-
-      if (!this.cadastrar) {
-        try {
-          let ps = this.sprints.map((e) => e.sprints);
-          let sprint = ps.find((c) => c.find((e) => e.path == this.contaAtualizar[1].sprint));
-          let spr = sprint.find((c) => c.path == this.contaAtualizar[1].sprint);
-          this.form.get("sprint").setValue(spr);
-        } catch (error) {}
-      }
+      console.log(res);
     } catch (error) {
       this.carregando = false;
     }
@@ -210,14 +92,14 @@ export class CadastrarContaComponent implements OnInit {
   private get _montarObj(): Conta[] {
     let contas: Conta[] = [
       {
-        urlCorporacao: this.form.get("urlPrincipal").value,
+        /* urlCorporacao: this.form.get("urlPrincipal").value,
         token: this.form.get("tokenPrincipal").value,
         projetoId: this.form.get("projetoPrincipal").value?.id,
         projetoNome: this.form.get("projetoPrincipal").value?.name,
-        principal: true,
+        principal: true,*/
       },
       {
-        urlCorporacao: this.form.get("urlSecundario").value,
+        /*urlCorporacao: this.form.get("urlSecundario").value,
         token: this.form.get("tokenSecundario").value,
         areaPath: this.form.get("areaPath").value?.name,
         nomeUsuario: this.form.get("nomeSecundario").value,
@@ -226,7 +108,7 @@ export class CadastrarContaComponent implements OnInit {
         projetoNome: this.form.get("projetoSecundario").value?.name,
         timeNome: this.form.get("time").value?.name,
         sprint: this.form.get("sprint").value?.path,
-        principal: false,
+        principal: false,*/
       },
     ];
     return contas;
@@ -245,7 +127,7 @@ export class CadastrarContaComponent implements OnInit {
   private async _cadastrar(): Promise<void> {
     try {
       const contas = this._montarObj;
-      const res = await this._contasControllerService.cadastrar(contas).toPromise();
+      const res = await this._contasControllerService.cadastrar({}).toPromise();
       this.carregando = false;
       this._snackBar.open("Contas cadastrada com sucesso!", "Fechar", {
         duration: 3000,
@@ -261,9 +143,7 @@ export class CadastrarContaComponent implements OnInit {
   private async _atualizar(): Promise<void> {
     try {
       const contas = this._montarObj;
-      contas[0].id = this.contaAtualizar[0].id;
-      contas[1].id = this.contaAtualizar[1].id;
-      const res = await this._contasControllerService.atualizar(contas).toPromise();
+      const res = await this._contasControllerService.atualizar({}).toPromise();
       this.carregando = false;
       this._snackBar.open("Contas atualizadas com sucesso!", "Fechar", {
         duration: 3000,

@@ -6,4 +6,5 @@ export class Azure {
   projetoId?: string;
   timeNome?: string;
   timeId?: string;
+  principal?: boolean;
 }

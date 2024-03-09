@@ -16,6 +16,7 @@ namespace Back.Data.EntityConfiguration
             builder.Property(p => p.ProjetoId).HasMaxLength(255);
             builder.Property(p => p.TimeNome).HasMaxLength(255);
             builder.Property(p => p.TimeId).HasMaxLength(255);
+            builder.Property(p => p.Principal).HasColumnType("Bit");
         }
     }
 }

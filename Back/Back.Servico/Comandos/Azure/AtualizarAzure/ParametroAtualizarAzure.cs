@@ -6,11 +6,11 @@ namespace Back.Servico.Comandos.Azure.AtualizarAzure
 {
     public class ParametroAtualizarAzure : IRequest<ResultadoCadastrarAzure>
     {
-        public ParametroAtualizarAzure(Dominio.Models.Azure dados)
+        public ParametroAtualizarAzure(List<Dominio.Models.Azure> dados)
         {
             Dados = dados;
         }
 
-        public Dominio.Models.Azure Dados { get; }
+        public List<Dominio.Models.Azure> Dados { get; }
     }
 }

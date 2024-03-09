@@ -5,11 +5,11 @@ namespace Back.Servico.Comandos.Azure.CadastrarAzure
 {
     public class ParametroCadastrarAzure : IRequest<ResultadoCadastrarAzure>
     {
-        public ParametroCadastrarAzure(Dominio.Models.Azure dados)
+        public ParametroCadastrarAzure(List<Dominio.Models.Azure> dados)
         {
             Dados = dados;
         }
 
-        public Dominio.Models.Azure Dados { get; }
+        public List<Dominio.Models.Azure> Dados { get; }
     }
 }

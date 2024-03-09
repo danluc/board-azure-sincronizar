@@ -32,7 +32,7 @@ export class DashboardComponent implements OnInit {
     this._contasControllerService.lista().subscribe(
       (res) => {
         this.carregando = false;
-        if (res.dados.length == 0) {
+        if (res.length == 0) {
           this._router.navigate(["/contas"]);
           this._snackBar.open("Nenhuma conta encontrada!", "Fechar", {
             duration: 3000,

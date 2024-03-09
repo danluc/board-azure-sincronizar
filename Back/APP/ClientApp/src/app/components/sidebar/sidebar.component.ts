@@ -11,7 +11,8 @@ declare interface RouteInfo {
 }
 export const ROUTES: RouteInfo[] = [
   { path: "/dashboard", title: "Sincronizar", icon: "dashboard", class: "" },
-  { path: "/contas", title: "Contas", icon: "persons", class: "" },
+  { path: "/contas", title: "Contas", icon: "groups", class: "" },
+  { path: "/azure", title: "Azure", icon: "apps", class: "" },
   { path: "/configuracoes", title: "Configurações", icon: "settings", class: "" },
 ];
 declare var electron: any;

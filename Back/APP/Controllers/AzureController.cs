@@ -4,6 +4,7 @@ using Back.Servico.Comandos.Azure.CadastrarAzure;
 using Back.Servico.Consultas.Azure.ListarAzure;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace APP.Controllers
@@ -29,7 +30,7 @@ namespace APP.Controllers
         }
 
         [HttpPost("")]
-        public async Task<ActionResult> Post(Azure Dados)
+        public async Task<ActionResult> Post(List<Azure> Dados)
         {
             var result = await _mediator.Send(new ParametroCadastrarAzure(Dados));
             if (!result.Sucesso)
@@ -39,7 +40,7 @@ namespace APP.Controllers
         }
 
         [HttpPut("")]
-        public async Task<ActionResult> Put(Azure Dados)
+        public async Task<ActionResult> Put(List<Azure> Dados)
         {
             var result = await _mediator.Send(new ParametroAtualizarAzure(Dados));
             if (!result.Sucesso)

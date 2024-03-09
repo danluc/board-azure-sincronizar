@@ -17,32 +17,33 @@ namespace Back.Servico.Consultas.Times.ListarAreas
 {
     class ConsultaListarAreas : IRequestHandler<ParametroListarAreas, ResultadoListarAreas>
     {
-        private readonly IRepositorioConsulta<Conta> _repositorioConsultaConta;
+        private readonly IRepositorioConsulta<Dominio.Models.Azure> _repositorioConsultaAzure;
 
-        public ConsultaListarAreas(IRepositorioConsulta<Conta> repositorioConsultaConta)
+        public ConsultaListarAreas(IRepositorioConsulta<Dominio.Models.Azure> repositorioConsultaAzure)
         {
-            _repositorioConsultaConta = repositorioConsultaConta;
+            _repositorioConsultaAzure = repositorioConsultaAzure;
         }
 
         public async Task<ResultadoListarAreas> Handle(ParametroListarAreas request, CancellationToken cancellationToken)
         {
             try
             {
+                var azure = await _repositorioConsultaAzure.FirstOrDefault(e => !e.Principal);
                 //Conecta na Azure
-                VssConnection connection = new VssConnection(new Uri(request.Dados.Url), new VssBasicCredential(string.Empty, request.Dados.Token));
+                VssConnection connection = new VssConnection(new Uri(azure.UrlCorporacao), new VssBasicCredential(string.Empty, azure.Token));
                 //Busca
                 WorkItemTrackingHttpClient witClient = connection.GetClient<WorkItemTrackingHttpClient>();
 
-                var iterationNodes = await witClient.GetClassificationNodeAsync(request.Dados.ProjetoNome, TreeStructureGroup.Areas, depth: 2);
+                var iterationNodes = await witClient.GetClassificationNodeAsync(azure.ProjetoNome, TreeStructureGroup.Areas, depth: 2);
 
-                var listaInterations = iterationNodes.Children.FirstOrDefault(e => e.Name.ToUpper() == request.Dados.TimeNome.ToUpper());
+                var listaInterations = iterationNodes.Children.FirstOrDefault(e => e.Name.ToUpper() == azure.TimeNome.ToUpper());
 
                 var iterations = new List<AreaDTO>();
                 if (listaInterations.Children != null)
-                    iterations = listaInterations.Children.Select(e => new AreaDTO { Id = e.Identifier, Name = e.Name, Path = e.Path }).ToList();
+                    iterations = listaInterations.Children.Select(e => new AreaDTO { Id = e.Id, Identificador = e.Identifier, Name = e.Name, Path = e.Path }).ToList();
                 else
                 {
-                    var area = new AreaDTO { Id = listaInterations.Identifier, Name = listaInterations.Name, Path = listaInterations.Path };
+                    var area = new AreaDTO { Id = listaInterations.Id, Identificador = listaInterations.Identifier, Name = listaInterations.Name, Path = listaInterations.Path };
                     iterations.Add(area);
                 }
 

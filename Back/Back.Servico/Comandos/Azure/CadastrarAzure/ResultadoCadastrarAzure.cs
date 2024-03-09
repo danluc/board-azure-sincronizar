@@ -5,6 +5,6 @@ namespace Back.Servico.Comandos.Azure.CadastrarAzure
 {
     public class ResultadoCadastrarAzure : ResultadoControllerDTO
     {
-        public Dominio.Models.Azure Dados { get; set; }
+        public List<Dominio.Models.Azure> Dados { get; set; }
     }
 }

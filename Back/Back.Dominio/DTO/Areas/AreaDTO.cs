@@ -7,14 +7,16 @@ namespace Back.Dominio.DTO.Areas
         public AreaDTO()
         { }
 
-        public AreaDTO(Guid id, string name, string path)
+        public AreaDTO(int id, Guid identificador, string name, string path)
         {
             Id = id;
+            Identificador = identificador;
             Name = name;
             Path = path;
         }
 
-        public Guid Id { get; set; }
+        public int Id { get; set; }
+        public Guid Identificador { get; set; }
         public string Name { get; set; }
         public string Path { get; set; }
     }

@@ -8,5 +8,6 @@
         public string ProjetoId { get; set; }
         public string TimeNome { get; set; }
         public string TimeId { get; set; }
+        public bool Principal { get; set; }
     }
 }

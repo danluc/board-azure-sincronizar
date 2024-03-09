@@ -30,9 +30,9 @@ namespace APP.Controllers
         }
 
         [HttpPost("BuscarAreas")]
-        public async Task<ActionResult> BuscarAreas(BuscarIterationsDTO dados)
+        public async Task<ActionResult> BuscarAreas()
         {
-            var result = await _mediator.Send(new ParametroListarAreas(dados));
+            var result = await _mediator.Send(new ParametroListarAreas());
             if (!result.Sucesso)
                 return BadRequest(result.Mensagem);
 
@@ -40,9 +40,9 @@ namespace APP.Controllers
         }
 
         [HttpPost("BuscarSprint")]
-        public async Task<ActionResult> BuscarSprint(BuscarIterationsDTO dados)
+        public async Task<ActionResult> BuscarSprint()
         {
-            var result = await _mediator.Send(new ParametroListarIterations(dados));
+            var result = await _mediator.Send(new ParametroListarIterations());
             if (!result.Sucesso)
                 return BadRequest(result.Mensagem);
 

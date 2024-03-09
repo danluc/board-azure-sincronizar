@@ -19,7 +19,7 @@ namespace Back.Servico.Comandos.Azure.CadastrarAzure
         {
             try
             {
-                await _repositorioComandoConta.Insert(request.Dados);
+                await _repositorioComandoConta.InsertRange(request.Dados);
                 await _repositorioComandoConta.SaveChangesAsync();
 
                 return new ResultadoCadastrarAzure

@@ -16,6 +16,9 @@ import { MatSelectModule } from "@angular/material/select";
 import { CadastrarContaComponent } from "./contas/cadastrar-conta/cadastrar-conta.component";
 import { MatFormFieldModule } from "@angular/material/form-field";
 import { PipesModule } from "./core/pipe/pipes.module";
+import { AzureComponent } from "./azure/azure.component";
+import { CadastrarAzureComponent } from "./azure/cadastrar-azure/cadastrar-azure.component";
+import { ListarAzureComponent } from "./azure/listar-azure/listar-azure.component";
 
 @NgModule({
   imports: [
@@ -31,9 +34,18 @@ import { PipesModule } from "./core/pipe/pipes.module";
     MatSelectModule,
     NgxMaskModule.forRoot(),
     MatFormFieldModule,
-    PipesModule
+    PipesModule,
   ],
-  declarations: [AppComponent, AdminLayoutComponent, ContasComponent, ConfiguracoesComponent, CadastrarContaComponent],
+  declarations: [
+    AppComponent,
+    AdminLayoutComponent,
+    ContasComponent,
+    ConfiguracoesComponent,
+    CadastrarContaComponent,
+    AzureComponent,
+    CadastrarAzureComponent,
+    ListarAzureComponent,
+  ],
   providers: [],
   bootstrap: [AppComponent],
 })

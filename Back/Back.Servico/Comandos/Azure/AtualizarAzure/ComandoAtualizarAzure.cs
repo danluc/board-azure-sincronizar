@@ -20,7 +20,7 @@ namespace Back.Servico.Comandos.Azure.AtualizarAzure
         {
             try
             {
-                _repositorioComandoConta.Update(request.Dados);
+                _repositorioComandoConta.UpdateRange(request.Dados);
                 await _repositorioComandoConta.SaveChangesAsync();
 
                 return new ResultadoCadastrarAzure

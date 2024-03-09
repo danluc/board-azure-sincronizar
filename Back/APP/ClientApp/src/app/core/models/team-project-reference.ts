@@ -1,5 +1,6 @@
 export class TeamProjectReference {
-  id?: string;
+  id?: number;
+  identificador?: string;
   name?: string;
   path?: string;
 }

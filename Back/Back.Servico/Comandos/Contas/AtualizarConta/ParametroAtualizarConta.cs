@@ -7,11 +7,11 @@ namespace Back.Servico.Comandos.Contas.AtualizarConta
 {
     public class ParametroAtualizarConta : IRequest<ResultadCadastrarConta>
     {
-        public ParametroAtualizarConta(List<Conta> dados)
+        public ParametroAtualizarConta(Conta dados)
         {
             Dados = dados;
         }
 
-        public List<Conta> Dados { get; }
+        public Conta Dados { get; }
     }
 }

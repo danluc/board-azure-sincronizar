@@ -11,6 +11,7 @@ namespace Back.Data.EntityConfiguration
             builder.ToTable("CONTAS");
             builder.Property(p => p.Id).HasColumnType("Integer").IsRequired().ValueGeneratedOnAdd();
             builder.Property(p => p.AreaId).HasColumnType("Integer");
+            builder.Property(p => p.SprintId).HasColumnType("Integer");
             builder.Property(p => p.EmailDe).HasMaxLength(255);
             builder.Property(p => p.EmailPara).HasMaxLength(255);
             builder.Property(p => p.AreaPath).HasMaxLength(255);

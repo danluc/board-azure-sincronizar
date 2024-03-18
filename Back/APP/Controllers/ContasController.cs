@@ -30,7 +30,7 @@ namespace APP.Controllers
         }
 
         [HttpPost("")]
-        public async Task<ActionResult> Post(List<Conta> Dados)
+        public async Task<ActionResult> Post(Conta Dados)
         {
             var result = await _mediator.Send(new ParametroCadastrarConta(Dados));
             if (!result.Sucesso)
@@ -40,7 +40,7 @@ namespace APP.Controllers
         }
 
         [HttpPut("")]
-        public async Task<ActionResult> Put(List<Conta> Dados)
+        public async Task<ActionResult> Put(Conta Dados)
         {
             var result = await _mediator.Send(new ParametroAtualizarConta(Dados));
             if (!result.Sucesso)

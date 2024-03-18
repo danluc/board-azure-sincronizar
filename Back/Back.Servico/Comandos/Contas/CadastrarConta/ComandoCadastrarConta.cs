@@ -20,10 +20,7 @@ namespace Back.Servico.Comandos.Contas.CadastrarConta
         {
             try
             {
-                if (request.Dados.Count == 0)
-                    throw new Exception($"Nenhum dado na requisição");
-
-                await _repositorioComandoConta.InsertRange(request.Dados);
+                await _repositorioComandoConta.Insert(request.Dados);
                 await _repositorioComandoConta.SaveChangesAsync();
 
                 return new ResultadCadastrarConta

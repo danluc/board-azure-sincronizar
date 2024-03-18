@@ -4,25 +4,85 @@
       <div class="col-md-12">
         <div class="card">
           <div class="card-header card-header-danger bg-laranja">
-            <h4 class="card-title">Configurar contas</h4>
+            <h4 class="card-title">Cadastrar/Editar conta</h4>
             <p class="card-category"></p>
           </div>
           <div class="card-body mt-3">
             <form [formGroup]="form">
-              <div class="row"></div>
-
-              <div class="row"></div>
-
+              <div class="row">
+                <div class="col-md-2">
+                  <mat-form-field class="example-full-width">
+                    <input matInput formControlName="emailDe" type="email" autocomplete="off" placeholder="E-mail DE" />
+                  </mat-form-field>
+                </div>
+                <div class="col-md-2">
+                  <mat-form-field class="example-full-width">
+                    <input matInput formControlName="emailPara" type="email" autocomplete="off" placeholder="E-mail PARA" />
+                  </mat-form-field>
+                </div>
+                <div class="col-md-3">
+                  <mat-form-field class="example-full-width">
+                    <mat-select formControlName="area" placeholder="Area">
+                      <mat-option *ngFor="let item of this.areas" [value]="item">{{ item.name }}</mat-option>
+                    </mat-select>
+                  </mat-form-field>
+                </div>
+                <div class="col-md-3">
+                  <mat-form-field class="example-full-width">
+                    <mat-select formControlName="sprint" placeholder="Sprint">
+                      <mat-optgroup *ngFor="let item of this.sprints; let i = index" [label]="item.time.name">
+                        <mat-option *ngFor="let sprint of item.sprints" [value]="sprint">{{ sprint.name }}</mat-option>
+                      </mat-optgroup>
+                    </mat-select>
+                  </mat-form-field>
+                </div>
+                <div class="col-md-2">
+                  <mat-form-field class="example-full-width">
+                    <input matInput formControlName="cliente" type="text" autocomplete="off" placeholder="Cliente" />
+                  </mat-form-field>
+                </div>
+              </div>
               <button
                 mat-raised-button
-                class="btn btn-danger bg-laranja pull-right mt-5"
+                class="btn btn-danger bg-laranja pull-right"
                 (click)="this.salvar()"
                 [disabled]="this.form.invalid || this.carregando"
               >
                 {{ this.carregando ? this.textoCarregando : "Salvar" }}
               </button>
+              <button mat-raised-button class="btn btn-danger pull-right" (click)="this.cancelarEditar()" *ngIf="!this.cadastrar">Cancelar</button>
               <div class="clearfix"></div>
             </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-md-12">
+        <div class="card">
+          <div class="card-header card-header-danger bg-laranja">
+            <h4 class="card-title">Contas</h4>
+            <p class="card-category"></p>
+          </div>
+          <div class="card-body mt-3">
+            <table style="width: 100%">
+              <tr>
+                <th>De</th>
+                <th>Para</th>
+                <th>Cliente</th>
+                <th></th>
+              </tr>
+
+              <tr *ngFor="let item of this.contas; let i = index">
+                <td>{{ item.emailDe }}</td>
+                <td>{{ item.emailPara }}</td>
+                <td>{{ item.cliente }}</td>
+                <td>
+                  <a href="javascript:void(0)" (click)="editar(item)">Editar</a>
+                </td>
+              </tr>
+            </table>
           </div>
         </div>
       </div>

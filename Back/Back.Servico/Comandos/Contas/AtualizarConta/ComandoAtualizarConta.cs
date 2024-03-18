@@ -21,10 +21,7 @@ namespace Back.Servico.Comandos.Contas.AtualizarConta
         {
             try
             {
-                if (request.Dados.Count == 0)
-                    throw new Exception($"Nenhum dado na requisição");
-
-                _repositorioComandoConta.UpdateRange(request.Dados);
+                _repositorioComandoConta.Update(request.Dados);
                 await _repositorioComandoConta.SaveChangesAsync();
 
                 return new ResultadCadastrarConta

@@ -6,7 +6,7 @@ namespace Back.Servico.Comandos.Contas.CadastrarConta
 {
     public class ResultadCadastrarConta : ResultadoControllerDTO
     {
-        public List<Conta> Dados { get; set; }
+        public Conta Dados { get; set; }
     }
 }
 

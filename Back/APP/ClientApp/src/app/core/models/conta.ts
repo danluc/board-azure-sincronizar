@@ -3,7 +3,8 @@ export class Conta {
   emailDe?: string;
   emailPara?: string;
   areaId?: number;
-  reaPath?: string;
+  sprintId?: number;
+  areaPath?: string;
   sprint?: string;
   cliente?: string;
 }

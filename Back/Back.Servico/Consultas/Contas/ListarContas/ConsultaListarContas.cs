@@ -1,6 +1,5 @@
 ﻿using Back.Dominio.Interfaces;
 using Back.Dominio.Models;
-using Back.Servico.Comandos.Contas.CadastrarConta;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -9,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Back.Servico.Consultas.Contas.ListarContas
 {
-    class ConsultaListarContas : IRequestHandler<ParametroListarContas, ResultadCadastrarConta>
+    class ConsultaListarContas : IRequestHandler<ParametroListarContas, ResultadoListarContas>
     {
         private readonly IRepositorioConsulta<Conta> _repositorioConsultaConta;
 
@@ -20,13 +19,13 @@ namespace Back.Servico.Consultas.Contas.ListarContas
             _repositorioConsultaConta = repositorioConsultaConta;
         }
 
-        public async Task<ResultadCadastrarConta> Handle(ParametroListarContas request, CancellationToken cancellationToken)
+        public async Task<ResultadoListarContas> Handle(ParametroListarContas request, CancellationToken cancellationToken)
         {
             try
             {
                 var configuracoes = await _repositorioConsultaConta.Query(readOnly: true).ToListAsync();
 
-                return new ResultadCadastrarConta
+                return new ResultadoListarContas
                 {
                     Sucesso = true,
                     Dados = configuracoes
@@ -34,7 +33,7 @@ namespace Back.Servico.Consultas.Contas.ListarContas
             }
             catch (Exception ex)
             {
-                return new ResultadCadastrarConta
+                return new ResultadoListarContas
                 {
                     Sucesso = false,
                     Mensagem = ex.Message

@@ -30,13 +30,14 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
         private readonly IRepositorioConsulta<Sincronizar> _repositorioConsultaSincronizar;
         private readonly IRepositorioConsulta<Configuracao> _repositorioConsultaConfiguracao;
         private readonly IRepositorioConsulta<Conta> _repositorioConsultaConta;
+        private readonly IRepositorioConsulta<Dominio.Models.Azure> _repositorioConsultaAzure;
         private readonly ILogger<ComandoSincronizarBoard> _logger;
         private readonly IConfiguration _configuration;
         private List<WorkItem> _itensSemParente;
-        private Conta _contaPrincipal;
-        private Conta _contaSecundaria;
+        private VssConnection _vssConnectionPrincipal;
+        private VssConnection _vssConnectionSecundaria;
         private Configuracao _configuracao;
-        private int _areaId = 0;
+        private bool _usandoElectron;
         private List<SincronizarItem> _itensEnviarEmail = new List<SincronizarItem>();
 
         public ComandoSincronizarBoard(
@@ -45,16 +46,19 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
             IRepositorioConsulta<Sincronizar> repositorioConsultaSincronizar,
             IRepositorioConsulta<Configuracao> repositorioConsultaConfiguracao,
             IRepositorioConsulta<Conta> repositorioConsultaConta,
+            IRepositorioConsulta<Dominio.Models.Azure> repositorioConsultaAzure,
             ILogger<ComandoSincronizarBoard> logger,
-            IConfiguration configuration            )
+            IConfiguration configuration)
         {
             _repositorioComandoSincronizar = repositorioComandoSincronizar;
             _repositorioComandoSincronizarItem = repositorioComandoSincronizarItem;
             _repositorioConsultaSincronizar = repositorioConsultaSincronizar;
             _repositorioConsultaConfiguracao = repositorioConsultaConfiguracao;
             _repositorioConsultaConta = repositorioConsultaConta;
+            _repositorioConsultaAzure = repositorioConsultaAzure;
             _logger = logger;
             _configuration = configuration;
+            _usandoElectron = _configuration.GetValue<bool>("Electron.Ativo");
             _itensSemParente = new List<WorkItem>();
         }
 
@@ -62,53 +66,58 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
         public async Task<ResultadoSincronizarBoard> Handle(ParametroSincronizarBoard request, CancellationToken cancellationToken)
         {
             //Envia a notificação para o front
-           /* var window = Electron.WindowManager.BrowserWindows?.First();
+            var window = Electron.WindowManager?.BrowserWindows?.First();
 
-            var sincronizar = new Sincronizar { DataInicio = DateTime.Now, Status = (int)EStatusSincronizar.PROCESSANDO };*/
+            var sincronizar = new Sincronizar { DataInicio = DateTime.Now, Status = (int)EStatusSincronizar.PROCESSANDO };
             try
             {
-                //Busca as contas
-               /* var contas = await _repositorioConsultaConta.Query().ToListAsync();
+                //Contas Azure
+                var azure = await _repositorioConsultaAzure.Query().ToListAsync();
 
-                if (contas.Count == 0)
-                    throw new Exception($"Nenhuma conta encontrada na base de dados");
+                if (azure.Count == 0)
+                    throw new Exception($"Nenhuma conta azure encontrada na base de dados");
+
+                //Busca as contas
+                var contas = await _repositorioConsultaConta.Query().ToListAsync();
 
                 #region REGISTRANDO_TABELA
                 await _repositorioComandoSincronizar.Insert(sincronizar);
                 await _repositorioComandoSincronizar.SaveChangesAsync();
-                Electron.IpcMain.Send(window, Constantes.NOTIFICACAO_SYNC_INICIO, Constantes.NOTIFICACAO_SYNC_INICIO);
+                if (_usandoElectron)
+                    Electron.IpcMain.Send(window, Constantes.NOTIFICACAO_SYNC_INICIO, Constantes.NOTIFICACAO_SYNC_INICIO);
                 #endregion
 
                 _configuracao = await _repositorioConsultaConfiguracao.Query().FirstOrDefaultAsync();
 
                 //Conta principal
-                _contaPrincipal = contas.FirstOrDefault(e => e.Principal);
-
-                //Busca as task para sincronizar
-                var itensSincronizar = await RecuperaItensSincronizar();
+                var contaPrincipal = azure.FirstOrDefault(e => e.Principal);
 
                 //Conta secundaria
-                _contaSecundaria = contas.FirstOrDefault(e => !e.Principal);
+                var contaSecundaria = azure.FirstOrDefault(e => !e.Principal);
 
-                _logger.LogInformation($"Qtd itens a ser copiados: {itensSincronizar.Count()}");
+                //Conectar na azure
+                _vssConnectionPrincipal = new VssConnection(new Uri(contaPrincipal.UrlCorporacao), new VssBasicCredential(string.Empty, contaPrincipal.Token));
+                _vssConnectionSecundaria = new VssConnection(new Uri(contaSecundaria.UrlCorporacao), new VssBasicCredential(string.Empty, contaSecundaria.Token));
 
-                //Migra as task
-                await EnviarTaskDestino(itensSincronizar);
+                foreach (var item in contas)
+                {
+                    //Busca as task para sincronizar
+                    var itensSincronizar = await RecuperaItensSincronizar(item, contaPrincipal);
+                    _logger.LogInformation($"Qtd itens a ser copiados: {itensSincronizar.Count() + itensSincronizar.Sum(c => c.Itens.Count())}");
+
+                    //Migra as task
+                    await EnviarTaskDestino(itensSincronizar);
+                }
 
                 #region ATUALIZANDO_TABELA
                 await AtualizarUltimoSicronizar(EStatusSincronizar.CONCLUIDO);
                 #endregion
 
-
                 //Atualizar historias fechadas
                 await AtualizarStatusHistorias();
 
-                Electron.IpcMain.Send(window, Constantes.NOTIFICACAO_SYNC_FIM, Constantes.NOTIFICACAO_SYNC_FIM);
-
-                //Enviar email
-                if (Configuracao.VerificarSeExisteEmail(_configuracao) && _itensEnviarEmail.Count > 0)
-                    _emailService.EmailSeincronizar(_configuracao, CorpoEmail(), _contaSecundaria.NomeUsuario);
-               */
+                if (_usandoElectron)
+                    Electron.IpcMain.Send(window, Constantes.NOTIFICACAO_SYNC_FIM, Constantes.NOTIFICACAO_SYNC_FIM);
 
                 return new ResultadoSincronizarBoard
                 {
@@ -121,7 +130,7 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
                 await AtualizarUltimoSicronizar(EStatusSincronizar.ERRO);
                 #endregion
 
-              // Electron.IpcMain.Send(window, Constantes.NOTIFICACAO_SYNC_FIM, Constantes.NOTIFICACAO_SYNC_FIM);
+                // Electron.IpcMain.Send(window, Constantes.NOTIFICACAO_SYNC_FIM, Constantes.NOTIFICACAO_SYNC_FIM);
 
                 return new ResultadoSincronizarBoard
                 {
@@ -131,39 +140,35 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
             }
         }
 
-        private async Task<List<ItensSicronizarDTO>> RecuperaItensSincronizar()
+        private async Task<List<ItensSicronizarDTO>> RecuperaItensSincronizar(Conta conta, Dominio.Models.Azure azure)
         {
             //Resultado
             var historias = new List<ItensSicronizarDTO>();
-            //Faz conexão com o azure
-           /* var connection = new VssConnection(new Uri(_contaPrincipal.UrlCorporacao), new VssBasicCredential(string.Empty, _contaPrincipal.Token));
-            var witClient = connection.GetClient<WorkItemTrackingHttpClient>();
+            var witClient = _vssConnectionPrincipal.GetClient<WorkItemTrackingHttpClient>();
             //Filtro data
             var data = DateTime.Now.AddDays(-_configuracao.Dia).Date.ToString("yyyy-MM-dd");
 
-            // Query para buscar os itens (bug e task) do usuário que está assinadas ou ja foi assinadas a ele
-            // Primeiro busca a task e por task, pega a historia
+            // Query para buscar os itens do usuário que está assinadas ou ja foi assinadas a ele
             Wiql query = new Wiql()
             {
                 Query = $@"SELECT [System.Id], [System.Title]  FROM WorkItems
-                                WHERE [System.AssignedTo] EVER @Me
-                                AND [System.TeamProject] = '{_contaPrincipal.ProjetoNome}'
-                                AND System.ChangedDate >= '{data} 00:00:00'
-                                AND [System.WorkItemType] IN ('{Constantes.TIPO_ITEM_TASK}',
-                                                              '{Constantes.TIPO_ITEM_BUG}',
-                                                              '{Constantes.TIPO_ITEM_ENABLER}',
-                                                              '{Constantes.TIPO_ITEM_DEBITO}',
-                                                              '{Constantes.TIPO_ITEM_SOLICITACAO}',
-                                                              '{Constantes.TIPO_ITEM_HISTORIA}')"
+                                 WHERE [System.AssignedTo] EVER '{conta.EmailDe}'
+                                 AND [System.TeamProject] = '{azure.ProjetoNome}'
+                                 AND System.ChangedDate >= '{data} 00:00:00'
+                                 AND [System.WorkItemType] IN ('{Constantes.TIPO_ITEM_TASK}',
+                                                               '{Constantes.TIPO_ITEM_BUG}',
+                                                               '{Constantes.TIPO_ITEM_ENABLER}',
+                                                               '{Constantes.TIPO_ITEM_DEBITO}',
+                                                               '{Constantes.TIPO_ITEM_SOLICITACAO}',
+                                                               '{Constantes.TIPO_ITEM_HISTORIA}')"
             };
             _logger.LogInformation($"RecuperaItensSincronizar Query: {query.Query}");
 
-            Guid projetoId = Guid.Parse(_contaPrincipal.ProjetoId);
+            Guid projetoId = Guid.Parse(azure.ProjetoId);
 
             //Roda a query
             WorkItemQueryResult queryResult = await witClient.QueryByWiqlAsync(query, projetoId);
             IEnumerable<int> taskIds = queryResult.WorkItems.Select(wi => wi.Id);
-            _logger.LogInformation($"RecuperaItensSincronizar Itens: {taskIds.Count()}");
 
             // Recupera as histórias, o item em si
             foreach (int taskId in taskIds)
@@ -177,24 +182,15 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
                 //Pega apenas itens de trabalho
                 var historiaId = task.Fields.FirstOrDefault(c => c.Key.Contains("System.Parent")).Value;
 
-                //Se não tem pai (historia) não vamos migrar
-                if (historiaId is null)
-                {
-                    //Verificar se é uma solicitação/debito, ela não tem historia
-                    if (tipoTask == Constantes.TIPO_ITEM_SOLICITACAO || tipoTask == Constantes.TIPO_ITEM_DEBITO)
-                        _itensSemParente.Add(task);
-
-                    continue;
-                }
-
-                //Se for enable não vamos pegar o pai
-                //Cadastramos como solicitação
                 if (tipoTask == Constantes.TIPO_ITEM_SOLICITACAO || tipoTask == Constantes.TIPO_ITEM_ENABLER || tipoTask == Constantes.TIPO_ITEM_HISTORIA || tipoTask == Constantes.TIPO_ITEM_DEBITO)
                 {
                     _itensSemParente.Add(task);
 
                     continue;
                 }
+
+                if (historiaId is null)
+                    continue;
 
                 // Recupera o pai (historia) da task
                 var idHistoria = Convert.ToInt32(historiaId.ToString());
@@ -227,7 +223,7 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
                 {
                     historias.Add(migrar);
                 }
-            }*/
+            }
 
             return historias;
         }
@@ -235,15 +231,11 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
         private async Task EnviarTaskDestino(List<ItensSicronizarDTO> historias)
         {
             //Faz conexão com o azure
-           /* VssConnection connection = new VssConnection(new Uri(_contaSecundaria.UrlCorporacao), new VssBasicCredential(string.Empty, _contaSecundaria.Token));
-
-            WorkItemTrackingHttpClient witClient = connection.GetClient<WorkItemTrackingHttpClient>();
-
-            _areaId = await BuscarArea(witClient) ?? 0;
+            WorkItemTrackingHttpClient witClient = _vssConnectionSecundaria.GetClient<WorkItemTrackingHttpClient>();
 
             foreach (var historia in historias)
             {
-                var resultado = await CadastrarItem(connection, historia.Historia, witClient, 0);
+                var resultado = await CadastrarItem(_vssConnectionSecundaria, historia.Historia, witClient, 0);
                 _logger.LogInformation($"Resultado historia: {resultado.Id}");
 
                 //Se não cadastrou/atualizou  a historia, vamos pular para o proximo
@@ -252,49 +244,30 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
 
                 //Se criou/atualizou, vamos cadastrar/atualizar os filhos
                 foreach (var task in historia.Itens)
-                    await CadastrarItem(connection, task, witClient, resultado.Id.Value);
+                    await CadastrarItem(_vssConnectionSecundaria, task, witClient, resultado.Id.Value);
 
             }
 
             //cadastra solicitação/enable
-            if(_itensSemParente.Count > 0)
+            if (_itensSemParente.Count > 0)
             {
                 var historiasId = historias.Select(c => c.Historia.Id).ToList();
                 _itensSemParente = _itensSemParente.Where(c => !historiasId.Contains(c.Id)).ToList();
                 foreach (var solicitacao in _itensSemParente)
                 {
-                    var resultado = await CadastrarItem(connection, solicitacao, witClient, 0);
+                    var resultado = await CadastrarItem(_vssConnectionSecundaria, solicitacao, witClient, 0);
                     _logger.LogInformation($"Resultado _itensSemParente: {resultado?.Id}");
                 }
-            }*/
-        }
-
-        private async Task<int?> BuscarArea(WorkItemTrackingHttpClient witClient)
-        {
-            /*var areasNode = await witClient.GetClassificationNodeAsync(_contaSecundaria.ProjetoNome, TreeStructureGroup.Areas, depth: 2);
-
-            if (areasNode.Children is null)
-                return areasNode.Id;
-
-            var listaAreas = areasNode.Children.FirstOrDefault(e => _contaSecundaria.TimeNome.ToUpper().Contains(e.Name.ToUpper()));
-
-            if (listaAreas is null)
-                return areasNode.Id;
-
-            if (listaAreas.Children != null)
-                return listaAreas.Children.FirstOrDefault(e => e.Name.ToUpper() == _contaSecundaria.AreaPath.ToUpper())?.Id;
-            else
-                return listaAreas.Id;*/
-            return 1;
+            }
         }
 
         private async Task<WorkItem> CadastrarItem(VssConnection connection, WorkItem item, WorkItemTrackingHttpClient witClient, int historiaId)
         {
             WorkItem resultado = new WorkItem();
-           /* var itemTask = await VerificarSeItemExisteNoDestino(connection, item.Id.Value);
+            var itemTask = await VerificarSeItemExisteNoDestino(connection, item.Id.Value);
             var tipoTask = item.Fields["System.WorkItemType"].ToString();
             var status = item.Fields["System.State"].ToString();
-            var operation = Operation.Replace;*/
+            var operation = Operation.Replace;
 
             try
             {

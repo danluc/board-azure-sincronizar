@@ -97,6 +97,7 @@ export class CadastrarContaComponent implements OnInit {
       cliente: this.form.get("cliente").value,
       sprint: this.form.get("sprint").value?.path,
       sprintId: this.form.get("sprint").value?.id,
+      ativo: true,
     };
 
     return conta;
@@ -166,5 +167,13 @@ export class CadastrarContaComponent implements OnInit {
     this.cadastrar = true;
     this.contaAtualizar = null;
     this.form.reset();
+  }
+
+  public async atualizarStatus(conta: Conta): Promise<void> {
+    this.carregando = true;
+    conta.ativo = !conta.ativo;
+    const res = await this._contasControllerService.atualizar(conta).toPromise();
+    this.carregando = false;
+    this._buscarContas();
   }
 }

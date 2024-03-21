@@ -9,5 +9,6 @@
         public string Sprint { get; set; }
         public long SprintId { get; set; }
         public string Cliente { get; set; }
+        public bool Ativo { get; set; }
     }
 }

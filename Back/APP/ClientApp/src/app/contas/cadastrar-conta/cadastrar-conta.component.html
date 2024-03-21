@@ -79,7 +79,8 @@
                 <td>{{ item.emailPara }}</td>
                 <td>{{ item.cliente }}</td>
                 <td>
-                  <a href="javascript:void(0)" (click)="editar(item)">Editar</a>
+                  <a href="javascript:void(0)" (click)="editar(item)">Editar</a> /
+                  <a href="javascript:void(0)" (click)="atualizarStatus(item)">{{ item.ativo ? 'Desativar' : 'Ativar' }}</a> 
                 </td>
               </tr>
             </table>

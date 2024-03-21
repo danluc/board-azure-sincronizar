@@ -7,4 +7,5 @@ export class Conta {
   areaPath?: string;
   sprint?: string;
   cliente?: string;
+  ativo?: boolean;
 }

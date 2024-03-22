@@ -69,7 +69,7 @@ namespace APP
             Electron.IpcMain.Send(window, "Esta é uma mensagem do backend.", "Teste");
 
             //Mostrar DevTools
-            bool devTools = Convert.ToBoolean(Configuration.GetSection("Electron:DevTools").Value ?? "false");
+            bool devTools = Configuration.GetValue<bool>("Electron:DevTools");
             if (devTools)
                 window.WebContents.OpenDevTools();
 

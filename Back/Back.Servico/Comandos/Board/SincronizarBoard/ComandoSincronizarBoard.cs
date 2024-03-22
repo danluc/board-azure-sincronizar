@@ -416,12 +416,15 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
             string descricaoCompleta = "";
 
             SincronizarHelper.AdicionarOperacao(patchDocument, operacao, "/fields/System.Title", $"{item.Id}: {item.Fields["System.Title"]}");
-            SincronizarHelper.AdicionarOperacao(patchDocument, operacao, "/fields/System.AreaId", _conta.AreaId.ToString());
+            
 
             //coloca a sprint so no cadastro
             if (operacao == Operation.Add)
+            {
+                SincronizarHelper.AdicionarOperacao(patchDocument, operacao, "/fields/System.AreaId", _conta.AreaId.ToString());
                 SincronizarHelper.AdicionarOperacao(patchDocument, operacao, "/fields/System.IterationPath", _conta.Sprint.Replace("Iteration\\", ""));
-
+            }
+                
             var estado = operacao == Operation.Add ? Constantes.STATUS_NOVO : SincronizarHelper.BuscarStatusItem(item.Fields["System.State"].ToString());
             SincronizarHelper.AdicionarOperacao(patchDocument, operacao, "/fields/System.State", estado);
 
@@ -480,7 +483,6 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
 
             return patchDocument;
         }
-
 
         private async Task AtualizarBugVS(Conta _conta)
         {

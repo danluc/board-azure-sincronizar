@@ -92,5 +92,6 @@ export class DashboardComponent implements OnInit {
 
   public alterarLista(): void {
     this.mostrarItens = !this.mostrarItens;
+    window.scrollTo(0,0);
   }
 }

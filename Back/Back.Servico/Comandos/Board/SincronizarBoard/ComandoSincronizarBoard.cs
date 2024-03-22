@@ -67,9 +67,7 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
         public async Task<ResultadoSincronizarBoard> Handle(ParametroSincronizarBoard request, CancellationToken cancellationToken)
         {
             //Envia a notificação para o front
-            BrowserWindow window = null;
-            if (_usandoElectron)
-                window = Electron.WindowManager?.BrowserWindows?.First();
+            BrowserWindow window = Electron.WindowManager.BrowserWindows.First();
 
             var sincronizar = new Sincronizar { DataInicio = DateTime.Now, Status = (int)EStatusSincronizar.PROCESSANDO };
             try
@@ -86,8 +84,7 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
                 #region REGISTRANDO_TABELA
                 await _repositorioComandoSincronizar.Insert(sincronizar);
                 await _repositorioComandoSincronizar.SaveChangesAsync();
-                if (_usandoElectron)
-                    Electron.IpcMain.Send(window, Constantes.NOTIFICACAO_SYNC_INICIO, Constantes.NOTIFICACAO_SYNC_INICIO);
+                Electron.IpcMain.Send(window, Constantes.NOTIFICACAO_SYNC_INICIO, Constantes.NOTIFICACAO_SYNC_INICIO);
                 #endregion
 
                 _configuracao = await _repositorioConsultaConfiguracao.Query().FirstOrDefaultAsync();
@@ -123,8 +120,7 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
                 #endregion
 
 
-                if (_usandoElectron)
-                    Electron.IpcMain.Send(window, Constantes.NOTIFICACAO_SYNC_FIM, Constantes.NOTIFICACAO_SYNC_FIM);
+                Electron.IpcMain.Send(window, Constantes.NOTIFICACAO_SYNC_FIM, Constantes.NOTIFICACAO_SYNC_FIM);
 
                 return new ResultadoSincronizarBoard
                 {
@@ -137,8 +133,7 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
                 await AtualizarUltimoSicronizar(EStatusSincronizar.ERRO);
                 #endregion
 
-                if (_usandoElectron)
-                    Electron.IpcMain.Send(window, Constantes.NOTIFICACAO_SYNC_FIM, Constantes.NOTIFICACAO_SYNC_FIM);
+                Electron.IpcMain.Send(window, Constantes.NOTIFICACAO_SYNC_FIM, Constantes.NOTIFICACAO_SYNC_FIM);
 
                 return new ResultadoSincronizarBoard
                 {
@@ -416,7 +411,7 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
             string descricaoCompleta = "";
 
             SincronizarHelper.AdicionarOperacao(patchDocument, operacao, "/fields/System.Title", $"{item.Id}: {item.Fields["System.Title"]}");
-            
+
 
             //coloca a sprint so no cadastro
             if (operacao == Operation.Add)
@@ -424,7 +419,7 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
                 SincronizarHelper.AdicionarOperacao(patchDocument, operacao, "/fields/System.AreaId", _conta.AreaId.ToString());
                 SincronizarHelper.AdicionarOperacao(patchDocument, operacao, "/fields/System.IterationPath", _conta.Sprint.Replace("Iteration\\", ""));
             }
-                
+
             var estado = operacao == Operation.Add ? Constantes.STATUS_NOVO : SincronizarHelper.BuscarStatusItem(item.Fields["System.State"].ToString());
             SincronizarHelper.AdicionarOperacao(patchDocument, operacao, "/fields/System.State", estado);
 

@@ -56,7 +56,7 @@ namespace APP
         {
             var browserOptions = new BrowserWindowOptions
             {
-                Width = 1000,
+                Width = 1150,
                 Height = 900,
             };
 

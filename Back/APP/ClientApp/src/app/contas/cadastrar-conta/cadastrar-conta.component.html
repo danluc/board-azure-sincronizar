@@ -1,5 +1,5 @@
 <div class="main-content">
-  <div class="container-fluid">
+  <div class="container-fluid" id="voltar-topo">
     <div class="row">
       <div class="col-md-12">
         <div class="card">
@@ -79,7 +79,7 @@
                 <td>{{ item.emailPara }}</td>
                 <td>{{ item.cliente }}</td>
                 <td>
-                  <a href="javascript:void(0)" (click)="editar(item)">Editar</a> /
+                  <a href="#voltar-topo" (click)="editar(item)">Editar</a> /
                   <a href="javascript:void(0)" (click)="atualizarStatus(item)">{{ item.ativo ? 'Desativar' : 'Ativar' }}</a> 
                 </td>
               </tr>

@@ -16,6 +16,7 @@
         public const string TIPO_ITEM_STORY_ENABLER = "Story Enabler";
         public const string TIPO_ITEM_STORY = "Story";
         public const string TIPO_ITEM_INCIDENTE = "Incident";
+        public const string TIPO_ITEM_SPIKE = "Spike";
         #endregion
 
         #region NOTIFICACAO

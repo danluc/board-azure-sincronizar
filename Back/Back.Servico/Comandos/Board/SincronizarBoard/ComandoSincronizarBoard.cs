@@ -40,7 +40,7 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
         private Configuracao _configuracao;
         private readonly bool _notificarPorEmail;
         private List<SincronizarItem> _itensCadastrarLocal = new List<SincronizarItem>();
-        private readonly string[] _tiposSemParente = new[] { Constantes.TIPO_ITEM_SOLICITACAO, Constantes.TIPO_ITEM_ENABLER, Constantes.TIPO_ITEM_HISTORIA, Constantes.TIPO_ITEM_DEBITO, Constantes.TIPO_ITEM_STORY, Constantes.TIPO_ITEM_STORY_ENABLER, Constantes.TIPO_ITEM_INCIDENTE };
+        private readonly string[] _tiposSemParente = new[] { Constantes.TIPO_ITEM_SOLICITACAO, Constantes.TIPO_ITEM_ENABLER, Constantes.TIPO_ITEM_HISTORIA, Constantes.TIPO_ITEM_DEBITO, Constantes.TIPO_ITEM_STORY, Constantes.TIPO_ITEM_STORY_ENABLER, Constantes.TIPO_ITEM_INCIDENTE, Constantes.TIPO_ITEM_SPIKE };
 
 
         public ComandoSincronizarBoard(

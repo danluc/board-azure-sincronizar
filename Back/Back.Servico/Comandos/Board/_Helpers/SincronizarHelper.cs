@@ -142,7 +142,7 @@ namespace Back.Servico.Comandos.Board._Helpers
 
         public static string RetornarTipoItem(string tipoTask)
         {
-            var _tiposSemParente = new[] { Constantes.TIPO_ITEM_SOLICITACAO, Constantes.TIPO_ITEM_ENABLER, Constantes.TIPO_ITEM_HISTORIA, Constantes.TIPO_ITEM_DEBITO, Constantes.TIPO_ITEM_STORY, Constantes.TIPO_ITEM_STORY_ENABLER };
+            var _tiposSemParente = new[] { Constantes.TIPO_ITEM_SOLICITACAO, Constantes.TIPO_ITEM_ENABLER, Constantes.TIPO_ITEM_HISTORIA, Constantes.TIPO_ITEM_DEBITO, Constantes.TIPO_ITEM_STORY, Constantes.TIPO_ITEM_STORY_ENABLER, Constantes.TIPO_ITEM_SPIKE };
 
             if (_tiposSemParente.Contains(tipoTask))
                 return Constantes.TIPO_ITEM_HISTORIA;

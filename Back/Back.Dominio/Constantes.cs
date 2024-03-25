@@ -13,6 +13,9 @@
         public const string TIPO_ITEM_HISTORIA = "User Story";
         public const string TIPO_ITEM_ENABLER = "Enabler";
         public const string TIPO_ITEM_DEBITO = "Débito Técnico";
+        public const string TIPO_ITEM_STORY_ENABLER = "Story Enabler";
+        public const string TIPO_ITEM_STORY = "Story";
+        public const string TIPO_ITEM_INCIDENTE = "Incident";
         #endregion
 
         #region NOTIFICACAO

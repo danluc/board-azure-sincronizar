@@ -22,10 +22,4 @@
 		<ProjectReference Include="..\Back.Dominio\Back.Dominio.csproj" />
 	</ItemGroup>
 
-	<ItemGroup>
-	  <None Update="Recursos\EmailSincronizar.html">
-	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	  </None>
-	</ItemGroup>
-
 </Project>

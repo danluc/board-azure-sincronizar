@@ -192,6 +192,8 @@ export class CadastrarAzureComponent implements OnInit {
   private async _atualizar(): Promise<void> {
     try {
       const contas = this._montarObj;
+      contas[0].id = this.contaAtualizar[0].id
+      contas[1].id = this.contaAtualizar[1].id
       const res = await this._azureControllerService.atualizar(contas).toPromise();
       this.carregando = false;
       this._snackBar.open("Conta Azure atualizadas com sucesso!", "Fechar", {

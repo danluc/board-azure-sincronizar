@@ -16,6 +16,7 @@ using Quartz.Impl;
 using Serilog;
 using System;
 using System.Collections.Specialized;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace APP.Configuracoes
@@ -62,6 +63,7 @@ namespace APP.Configuracoes
                 var repoConsultaConfiguracao = scope.ServiceProvider.GetRequiredService<IRepositorioConsulta<Configuracao>>();
                 var repoConsultaSincronizar = scope.ServiceProvider.GetRequiredService<IRepositorioConsulta<Sincronizar>>();
                 var repoComandoSincronizar = scope.ServiceProvider.GetRequiredService<IRepositorioComando<Sincronizar>>();
+                var repoComandoSincronizarItens = scope.ServiceProvider.GetRequiredService<IRepositorioComando<SincronizarItem>>();
 
                 var processando = await repoConsultaSincronizar.FindBy(e => e.Status == (int)EStatusSincronizar.PROCESSANDO);
                 foreach (var item in processando)
@@ -71,6 +73,18 @@ namespace APP.Configuracoes
                     repoComandoSincronizar.Update(item);
                     await repoComandoSincronizar.SaveChangesAsync();
                 }
+
+                try
+                {
+                    var ultimo = await repoConsultaSincronizar.Query(e => e.DataInicio.Date <= DateTime.Now.Date.AddDays(-5)).OrderByDescending(c => c.Id).Select(c => c.Id).FirstOrDefaultAsync();
+                    if(ultimo > 0)
+                    {
+                        repoComandoSincronizarItens.DeleteRange(e => e.SincronizarId == ultimo);
+                        await repoComandoSincronizarItens.SaveChangesAsync();
+                    }
+                }
+                catch (Exception)
+                {}
 
                 var config = await repoConsultaConfiguracao.Query().FirstOrDefaultAsync();
                 var horaCron = config.HoraCron.Split(":");

@@ -33,7 +33,7 @@
                 <a href="javascript:void(0)" (click)="this.listaSincronizar()" id="listar-sincronizar-board">Listar</a>
               </div>
               <button mat-raised-button class="btn btn-danger bg-laranja pull-right mt-5" [disabled]="this.carregando" (click)="this.sincronizar()">
-                {{ this.carregando ? "Sincronizando" : "Sincronizar" }}
+                {{ this.carregando ? "Sincronizando..." : "Sincronizar" }}
               </button>
               <div class="clearfix"></div>
             </div>

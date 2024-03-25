@@ -1,5 +1,6 @@
 ﻿using Back.Dominio;
 using Back.Dominio.Models;
+using Microsoft.Extensions.Configuration;
 using Microsoft.TeamFoundation.WorkItemTracking.WebApi.Models;
 using Microsoft.VisualStudio.Services.WebApi;
 using Microsoft.VisualStudio.Services.WebApi.Patch;
@@ -72,12 +73,13 @@ namespace Back.Servico.Comandos.Board._Helpers
                {"Removido", "Blocked"},
 
                //BUG
-               //{"Backlog",       "New"},
-               {"Em construção","Active"},
-               {"Validação",    "Active"},
-               {"Reaberto",     "Active"},
-               {"Closed",       "Closed"},
-               //{"Removido",     "Blocked"},
+               {"Promote to Production",       "Active"},
+               {"Em construção",               "Active"},
+               {"Validação",                   "Active"},
+               {"Reaberto",                    "Active"},
+               {"Closed",                      "Closed"},
+               {"Waiting",                     "Active"},
+               {"Develop In Progress",         "Active"},
 
                //SOLICITAÇÃO
                {"WIP",      "inDesign"},
@@ -102,27 +104,36 @@ namespace Back.Servico.Comandos.Board._Helpers
             });
         }
 
-        public static string BuscarMotivo(string motivoPrimario)
+        public static string BuscarMotivo(string motivoPrimario, IConfiguration configuration)
         {
-            var motivo = DicionarioMotivos().Where(c => c.Key.ToUpper() == motivoPrimario.ToUpper()).Select(c => c.Value).FirstOrDefault();
+            if (string.IsNullOrEmpty(motivoPrimario))
+                return "Não é um erro";
+
+            var motivo = configuration.GetSection($"MotivosBug:{motivoPrimario}")?.Value;
+            //var motivo = DicionarioMotivos().Where(c => c.Key.ToUpper() == motivoPrimario.ToUpper()).Select(c => c.Value).FirstOrDefault();
             if (motivo is null)
                 return "Não é um erro";
 
             return motivo;
         }
 
-        public static string BuscarMotivoEhBug(string motivoPrimario)
+        public static string BuscarMotivoEhBug(string motivoPrimario, IConfiguration configuration)
         {
-            bool resultado = DicionarioMotivosEhBug().Where(c => c.Key.ToUpper() == motivoPrimario.ToUpper()).Select(c => c.Value).FirstOrDefault();
+            if (string.IsNullOrEmpty(motivoPrimario))
+                return "Não";
+
+            var resultado = Convert.ToBoolean(configuration.GetSection($"MotivosEhBug:{motivoPrimario}")?.Value);
+
             if (resultado)
                 return "Sim";
             else
                 return "Não";
         }
 
-        public static string BuscarStatusItem(string status)
+        public static string BuscarStatusItem(string status, string tipo, IConfiguration configuration)
         {
-            var motivo = DicionarioStatusItem().Where(c => c.Key.ToUpper() == status.ToUpper()).Select(c => c.Value).FirstOrDefault();
+            var motivo = configuration.GetSection($"EstadosItens:{tipo}:{status}")?.Value;
+            //var motivo = DicionarioStatusItem().Where(c => c.Key.ToUpper() == status.ToUpper()).Select(c => c.Value).FirstOrDefault();
             if (motivo is null)
                 return "New";
 
@@ -131,8 +142,12 @@ namespace Back.Servico.Comandos.Board._Helpers
 
         public static string RetornarTipoItem(string tipoTask)
         {
-            if (tipoTask == Constantes.TIPO_ITEM_ENABLER || tipoTask == Constantes.TIPO_ITEM_DEBITO || tipoTask == Constantes.TIPO_ITEM_SOLICITACAO)
+            var _tiposSemParente = new[] { Constantes.TIPO_ITEM_SOLICITACAO, Constantes.TIPO_ITEM_ENABLER, Constantes.TIPO_ITEM_HISTORIA, Constantes.TIPO_ITEM_DEBITO, Constantes.TIPO_ITEM_STORY, Constantes.TIPO_ITEM_STORY_ENABLER };
+
+            if (_tiposSemParente.Contains(tipoTask))
                 return Constantes.TIPO_ITEM_HISTORIA;
+            else if (tipoTask == Constantes.TIPO_ITEM_INCIDENTE)
+                return "Incidente";
             else
                 return tipoTask;
         }

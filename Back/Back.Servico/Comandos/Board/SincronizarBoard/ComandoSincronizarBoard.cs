@@ -38,8 +38,10 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
         private VssConnection _vssConnectionSecundaria;
         private Dominio.Models.Azure _secundariaAzure;
         private Configuracao _configuracao;
-        private bool _usandoElectron;
+        private readonly bool _notificarPorEmail;
         private List<SincronizarItem> _itensCadastrarLocal = new List<SincronizarItem>();
+        private readonly string[] _tiposSemParente = new[] { Constantes.TIPO_ITEM_SOLICITACAO, Constantes.TIPO_ITEM_ENABLER, Constantes.TIPO_ITEM_HISTORIA, Constantes.TIPO_ITEM_DEBITO, Constantes.TIPO_ITEM_STORY, Constantes.TIPO_ITEM_STORY_ENABLER, Constantes.TIPO_ITEM_INCIDENTE };
+
 
         public ComandoSincronizarBoard(
             IRepositorioComando<Sincronizar> repositorioComandoSincronizar,
@@ -59,7 +61,7 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
             _repositorioConsultaAzure = repositorioConsultaAzure;
             _logger = logger;
             _configuration = configuration;
-            _usandoElectron = _configuration.GetValue<bool>("Electron.Ativo");
+            _notificarPorEmail = _configuration.GetValue<bool>("NotificarPorEmail");
             _itensSemParente = new List<WorkItem>();
         }
 
@@ -106,7 +108,7 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
                     //Busca as task para sincronizar
                     var itensSincronizar = await RecuperaItensSincronizar(item);
 
-                    _logger.LogInformation($"Qtd itens a ser copiados: {itensSincronizar.Count() + itensSincronizar.Sum(c => c.Itens.Count())}");
+                    _logger.LogInformation($"Qtd itens a ser copiados: {itensSincronizar.Count() + itensSincronizar.Sum(c => c.Itens.Count()) + _itensSemParente.Count()}");
 
                     //Migra as task
                     await EnviarTaskDestino(itensSincronizar, item);
@@ -150,6 +152,7 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
             var witClient = _vssConnectionPrincipal.GetClient<WorkItemTrackingHttpClient>();
             //Filtro data
             var data = DateTime.Now.AddDays(-_configuracao.Dia).Date.ToString("yyyy-MM-dd");
+            var itensBuscar = string.Join(",", _configuration.GetSection("ItensBuscar:Itens").Get<List<string>>().Select(e => "'" + e + "'"));
 
             // Query para buscar os itens do usuário que está assinadas ou ja foi assinadas a ele
             Wiql query = new Wiql()
@@ -157,12 +160,7 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
                 Query = $@"SELECT [System.Id], [System.Title]  FROM WorkItems
                                  WHERE [System.AssignedTo] EVER '{conta.EmailDe}'
                                  AND System.ChangedDate >= '{data} 00:00:00'
-                                 AND [System.WorkItemType] IN ('{Constantes.TIPO_ITEM_TASK}',
-                                                               '{Constantes.TIPO_ITEM_BUG}',
-                                                               '{Constantes.TIPO_ITEM_ENABLER}',
-                                                               '{Constantes.TIPO_ITEM_DEBITO}',
-                                                               '{Constantes.TIPO_ITEM_SOLICITACAO}',
-                                                               '{Constantes.TIPO_ITEM_HISTORIA}')"
+                                 AND [System.WorkItemType] IN ({itensBuscar})"
             };
             _logger.LogInformation($"RecuperaItensSincronizar Query: {query.Query}");
 
@@ -181,8 +179,7 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
 
                 //Pega apenas itens de trabalho
                 var historiaId = task.Fields.FirstOrDefault(c => c.Key.Contains("System.Parent")).Value;
-
-                if (tipoTask == Constantes.TIPO_ITEM_SOLICITACAO || tipoTask == Constantes.TIPO_ITEM_ENABLER || tipoTask == Constantes.TIPO_ITEM_HISTORIA || tipoTask == Constantes.TIPO_ITEM_DEBITO)
+                if (_tiposSemParente.Contains(tipoTask))
                 {
                     _itensSemParente.Add(task);
 
@@ -190,7 +187,16 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
                 }
 
                 if (historiaId is null)
+                {
+                    //Se é um bug ou task sem parente(sem historia) vamos cadastrar como incidente
+                    if (tipoTask == Constantes.TIPO_ITEM_TASK || tipoTask == Constantes.TIPO_ITEM_BUG)
+                    {
+                        task.Fields["System.WorkItemType"] = Constantes.TIPO_ITEM_INCIDENTE;
+                        _itensSemParente.Add(task);
+                    }
+
                     continue;
+                }
 
                 // Recupera o pai (historia) da task
                 var idHistoria = Convert.ToInt32(historiaId.ToString());
@@ -236,11 +242,12 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
             foreach (var historia in historias)
             {
                 var resultado = await CadastrarItem(_vssConnectionSecundaria, historia.Historia, witClient, conta, 0);
-                _logger.LogInformation($"Resultado historia: {resultado.Id}");
-
+                
                 //Se não cadastrou/atualizou  a historia, vamos pular para o proximo
                 if (resultado is null)
                     continue;
+
+                _logger.LogInformation($"Resultado historia: {resultado?.Id}");
 
                 //Se criou/atualizou, vamos cadastrar/atualizar os filhos
                 foreach (var task in historia.Itens)
@@ -277,14 +284,14 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
                     _logger.LogInformation($"Fluxo cadastrar {tipoTask} - {item.Id}");
                     var ntipoTask = SincronizarHelper.RetornarTipoItem(tipoTask);
                     var novoItemTask = TratarObjeto(item, historiaId, conta);
-                    resultado = await witClient.CreateWorkItemAsync(novoItemTask, Guid.Parse(_secundariaAzure.ProjetoId), ntipoTask);
+                    resultado = await witClient.CreateWorkItemAsync(novoItemTask, Guid.Parse(_secundariaAzure.ProjetoId), ntipoTask, suppressNotifications: _notificarPorEmail);
 
                     //Não pode criar um item ja com status ativo, então cria como novo e logo atualiza
                     if (status != Constantes.STATUS_NOVO)
                     {
                         var patchDocument = new JsonPatchDocument();
-                        SincronizarHelper.AdicionarOperacao(patchDocument, Operation.Replace, "/fields/System.State", SincronizarHelper.BuscarStatusItem(status));
-                        await witClient.UpdateWorkItemAsync(patchDocument, resultado.Id.Value);
+                        SincronizarHelper.AdicionarOperacao(patchDocument, Operation.Replace, "/fields/System.State", SincronizarHelper.BuscarStatusItem(status, tipoTask, _configuration));
+                        await witClient.UpdateWorkItemAsync(patchDocument, resultado.Id.Value, suppressNotifications: _notificarPorEmail);
                     }
                     operation = Operation.Add;
                     _itensCadastrarLocal.Add(new SincronizarItem(tipoTask, item.Id, resultado.Id, "Criado"));
@@ -295,7 +302,7 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
 
                     item.Fields["System.AssignedTo"] = itemTask.Fields.FirstOrDefault(c => c.Key == "System.AssignedTo").Value ?? conta.EmailPara;
                     var atualizarTask = TratarObjeto(item, historiaId, conta, Operation.Replace);
-                    resultado = await witClient.UpdateWorkItemAsync(atualizarTask, itemTask.Id.Value);
+                    resultado = await witClient.UpdateWorkItemAsync(atualizarTask, itemTask.Id.Value, suppressNotifications: _notificarPorEmail);
                     _itensCadastrarLocal.Add(new SincronizarItem(tipoTask, item.Id, resultado.Id, "Atualizado"));
                 }
 
@@ -303,7 +310,7 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
                 if (tipoTask == Constantes.TIPO_ITEM_BUG)
                     await CamposCustomizaveis(resultado, witClient, operation, item, conta);
 
-                _logger.LogInformation($"Resultado: {resultado.Id}, tipo: {tipoTask}");
+                _logger.LogInformation($"Resultado: {resultado?.Id}, tipo: {tipoTask}");
                 return resultado;
             }
             catch (Exception ex)
@@ -327,27 +334,27 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
                 var motivo = itemOriginal.Fields.FirstOrDefault(c => c.Key == "Custom.CausaRaiz").Value?.ToString();
                 if (!string.IsNullOrEmpty(motivo))
                 {
-                    SincronizarHelper.AdicionarOperacao(patchDocument, operacao, "/fields/Custom.Motivodademanda", SincronizarHelper.BuscarMotivo(motivo));
-
-                    //Dev responsavel pelo bug                    
-                    var devResponsavel = item.Fields.FirstOrDefault(c => c.Key == "Custom.DevResponsavel").Value?.ToString();
-                    patchDocument.Add(new JsonPatchOperation()
-                    {
-                        Operation = operacao,
-                        Path = "/fields/Custom.DevResponsavel",
-                        Value = operacao == Operation.Add ? conta.EmailPara : !string.IsNullOrEmpty(devResponsavel) ? ((IdentityRef)item.Fields["Custom.DevResponsavel"]).UniqueName : conta.EmailPara,
-                    });
+                    SincronizarHelper.AdicionarOperacao(patchDocument, operacao, "/fields/Custom.Motivodademanda", SincronizarHelper.BuscarMotivo(motivo, _configuration));
 
                     //é Bug
-                    var ehBug = SincronizarHelper.BuscarMotivoEhBug(motivo);
+                    var ehBug = SincronizarHelper.BuscarMotivoEhBug(motivo, _configuration);
                     SincronizarHelper.AdicionarOperacao(patchDocument, operacao, "/fields/Custom.90c3dfca-b144-449b-a280-0371f1834781", ehBug);
                 }
 
-                await witClient.UpdateWorkItemAsync(patchDocument, item.Id.Value);
+                //Dev responsavel pelo bug                    
+                var devResponsavel = item.Fields.FirstOrDefault(c => c.Key == "Custom.DevResponsavel").Value?.ToString();
+                patchDocument.Add(new JsonPatchOperation()
+                {
+                    Operation = operacao,
+                    Path = "/fields/Custom.DevResponsavel",
+                    Value = operacao == Operation.Add ? conta.EmailPara : !string.IsNullOrEmpty(devResponsavel) ? ((IdentityRef)item.Fields["Custom.DevResponsavel"]).UniqueName : conta.EmailPara,
+                });
+
+                await witClient.UpdateWorkItemAsync(patchDocument, item.Id.Value, suppressNotifications: _notificarPorEmail);
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Erro campo customizavel: {ex.Message}, BUG: {item.Id.Value}");
+                _logger.LogError($"Erro campo customizavel: {ex.Message}, BUG: {item.Id}");
             }
         }
 
@@ -412,7 +419,6 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
 
             SincronizarHelper.AdicionarOperacao(patchDocument, operacao, "/fields/System.Title", $"{item.Id}: {item.Fields["System.Title"]}");
 
-
             //coloca a sprint so no cadastro
             if (operacao == Operation.Add)
             {
@@ -420,7 +426,7 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
                 SincronizarHelper.AdicionarOperacao(patchDocument, operacao, "/fields/System.IterationPath", _conta.Sprint.Replace("Iteration\\", ""));
             }
 
-            var estado = operacao == Operation.Add ? Constantes.STATUS_NOVO : SincronizarHelper.BuscarStatusItem(item.Fields["System.State"].ToString());
+            var estado = operacao == Operation.Add ? Constantes.STATUS_NOVO : SincronizarHelper.BuscarStatusItem(item.Fields["System.State"].ToString(), tipoTask, _configuration);
             SincronizarHelper.AdicionarOperacao(patchDocument, operacao, "/fields/System.State", estado);
 
             var assignedTo = operacao == Operation.Add ? _conta.EmailPara : SincronizarHelper.ObterAssignedTo(item.Fields["System.AssignedTo"]);
@@ -457,21 +463,21 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
                 });
             }
 
-            if (tipoTask == Constantes.TIPO_ITEM_SOLICITACAO)
-            {
-                var descricaoServiceNow = item.Fields.FirstOrDefault(c => c.Key == "Custom.DescricaoServiceNow").Value?.ToString();
-                if (descricaoServiceNow != null)
-                    descricaoCompleta += $"<br/> {descricaoServiceNow}";
-            }
-
             var tecnico = item.Fields.FirstOrDefault(c => c.Key == "Custom.e0b31173-d9a6-471a-afe3-7a52d4e0ff9d").Value?.ToString();
             if (tecnico != null)
                 SincronizarHelper.AdicionarOperacao(patchDocument, operacao, "/fields/Custom.Detalhe", tecnico);
 
+            var descricaoServiceNow = item.Fields.FirstOrDefault(c => c.Key == "Custom.DescricaoServiceNow").Value?.ToString();
+            if (descricaoServiceNow != null)
+                descricaoCompleta += $"<br/> {descricaoServiceNow}";
 
             var aceite = item.Fields.FirstOrDefault(c => c.Key == "Custom.88c5eab7-acc0-42bf-a522-614c59da35b0").Value?.ToString();
             if (aceite != null)
                 descricaoCompleta += $"<br/> {aceite}";
+
+            var solicitacaoDesc = item.Fields.FirstOrDefault(c => c.Key == "Custom.cea86993-d06d-4650-b3ba-49a878dd09a1").Value?.ToString();
+            if (solicitacaoDesc != null)
+                descricaoCompleta += $"<br/> {solicitacaoDesc}";
 
 
             SincronizarHelper.AdicionarOperacao(patchDocument, operacao, "/fields/System.Description", descricaoCompleta);
@@ -483,7 +489,7 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
         {
             try
             {
-                DateTime dataUltimaSinc = await _repositorioConsultaSincronizar.Query(e => e.Status == (int)EStatusSincronizar.CONCLUIDO).OrderByDescending(c => c.Id).Select(c => c.DataFim).FirstOrDefaultAsync() ?? DateTime.Now;
+                DateTime dataUltimaSinc = await _repositorioConsultaSincronizar.Query(e => e.Status == (int)EStatusSincronizar.CONCLUIDO).OrderByDescending(c => c.Id).Select(c => c.DataFim).FirstOrDefaultAsync() ?? DateTime.Now.Date;
 
                 WorkItemTrackingHttpClient witClientP = _vssConnectionPrincipal.GetClient<WorkItemTrackingHttpClient>();
 

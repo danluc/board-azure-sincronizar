@@ -102,7 +102,7 @@ namespace Back.Data.Migrations
                 table: "SINCRONIZAR_ITENS",
                 column: "SincronizarId");
 
-            migrationBuilder.Sql($"INSERT INTO CONFIGURACOES (Dia, HoraCron) VALUES (1, '16:30')");
+            migrationBuilder.Sql($"INSERT INTO CONFIGURACOES (Dia, HoraCron) VALUES (0, '16:30')");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)

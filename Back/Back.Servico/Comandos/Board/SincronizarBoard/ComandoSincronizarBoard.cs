@@ -40,7 +40,7 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
         private Configuracao _configuracao;
         private readonly bool _notificarPorEmail;
         private List<SincronizarItem> _itensCadastrarLocal = new List<SincronizarItem>();
-        private readonly string[] _tiposSemParente = new[] { Constantes.TIPO_ITEM_SOLICITACAO, Constantes.TIPO_ITEM_ENABLER, Constantes.TIPO_ITEM_HISTORIA, Constantes.TIPO_ITEM_DEBITO, Constantes.TIPO_ITEM_STORY, Constantes.TIPO_ITEM_STORY_ENABLER, Constantes.TIPO_ITEM_INCIDENTE, Constantes.TIPO_ITEM_SPIKE };
+        private List<string> _tiposSemParente;
 
 
         public ComandoSincronizarBoard(
@@ -62,6 +62,7 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
             _logger = logger;
             _configuration = configuration;
             _notificarPorEmail = _configuration.GetValue<bool>("NotificarPorEmail");
+            _tiposSemParente = _configuration.GetSection("ItensBuscar:TiposSemParente").Get<List<string>>();
             _itensSemParente = new List<WorkItem>();
         }
 
@@ -69,7 +70,7 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
         public async Task<ResultadoSincronizarBoard> Handle(ParametroSincronizarBoard request, CancellationToken cancellationToken)
         {
             //Envia a notificação para o front
-            BrowserWindow window = Electron.WindowManager.BrowserWindows.First();
+            //BrowserWindow window = Electron.WindowManager.BrowserWindows.First();
 
             var sincronizar = new Sincronizar { DataInicio = DateTime.Now, Status = (int)EStatusSincronizar.PROCESSANDO };
             try
@@ -86,7 +87,7 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
                 #region REGISTRANDO_TABELA
                 await _repositorioComandoSincronizar.Insert(sincronizar);
                 await _repositorioComandoSincronizar.SaveChangesAsync();
-                Electron.IpcMain.Send(window, Constantes.NOTIFICACAO_SYNC_INICIO, Constantes.NOTIFICACAO_SYNC_INICIO);
+                //Electron.IpcMain.Send(window, Constantes.NOTIFICACAO_SYNC_INICIO, Constantes.NOTIFICACAO_SYNC_INICIO);
                 #endregion
 
                 _configuracao = await _repositorioConsultaConfiguracao.Query().FirstOrDefaultAsync();
@@ -122,7 +123,7 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
                 #endregion
 
 
-                Electron.IpcMain.Send(window, Constantes.NOTIFICACAO_SYNC_FIM, Constantes.NOTIFICACAO_SYNC_FIM);
+                //Electron.IpcMain.Send(window, Constantes.NOTIFICACAO_SYNC_FIM, Constantes.NOTIFICACAO_SYNC_FIM);
 
                 return new ResultadoSincronizarBoard
                 {
@@ -135,7 +136,7 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
                 await AtualizarUltimoSicronizar(EStatusSincronizar.ERRO);
                 #endregion
 
-                Electron.IpcMain.Send(window, Constantes.NOTIFICACAO_SYNC_FIM, Constantes.NOTIFICACAO_SYNC_FIM);
+                //Electron.IpcMain.Send(window, Constantes.NOTIFICACAO_SYNC_FIM, Constantes.NOTIFICACAO_SYNC_FIM);
 
                 return new ResultadoSincronizarBoard
                 {

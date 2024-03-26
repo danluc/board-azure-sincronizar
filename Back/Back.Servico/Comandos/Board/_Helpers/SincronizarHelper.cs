@@ -140,9 +140,9 @@ namespace Back.Servico.Comandos.Board._Helpers
             return motivo;
         }
 
-        public static string RetornarTipoItem(string tipoTask)
+        public static string RetornarTipoItem(string tipoTask, IConfiguration configuration)
         {
-            var _tiposSemParente = new[] { Constantes.TIPO_ITEM_SOLICITACAO, Constantes.TIPO_ITEM_ENABLER, Constantes.TIPO_ITEM_HISTORIA, Constantes.TIPO_ITEM_DEBITO, Constantes.TIPO_ITEM_STORY, Constantes.TIPO_ITEM_STORY_ENABLER, Constantes.TIPO_ITEM_SPIKE };
+            var _tiposSemParente = configuration.GetSection("ItensBuscar:TiposSemParente").Get<List<string>>().Where(e => e != Constantes.TIPO_ITEM_INCIDENTE).ToList();
 
             if (_tiposSemParente.Contains(tipoTask))
                 return Constantes.TIPO_ITEM_HISTORIA;

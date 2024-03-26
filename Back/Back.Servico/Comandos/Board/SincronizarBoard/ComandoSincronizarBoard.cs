@@ -70,7 +70,7 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
         public async Task<ResultadoSincronizarBoard> Handle(ParametroSincronizarBoard request, CancellationToken cancellationToken)
         {
             //Envia a notificação para o front
-            //BrowserWindow window = Electron.WindowManager.BrowserWindows.First();
+            BrowserWindow window = Electron.WindowManager.BrowserWindows.First();
 
             var sincronizar = new Sincronizar { DataInicio = DateTime.Now, Status = (int)EStatusSincronizar.PROCESSANDO };
             try
@@ -87,7 +87,7 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
                 #region REGISTRANDO_TABELA
                 await _repositorioComandoSincronizar.Insert(sincronizar);
                 await _repositorioComandoSincronizar.SaveChangesAsync();
-                //Electron.IpcMain.Send(window, Constantes.NOTIFICACAO_SYNC_INICIO, Constantes.NOTIFICACAO_SYNC_INICIO);
+                Electron.IpcMain.Send(window, Constantes.NOTIFICACAO_SYNC_INICIO, Constantes.NOTIFICACAO_SYNC_INICIO);
                 #endregion
 
                 _configuracao = await _repositorioConsultaConfiguracao.Query().FirstOrDefaultAsync();
@@ -123,7 +123,7 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
                 #endregion
 
 
-                //Electron.IpcMain.Send(window, Constantes.NOTIFICACAO_SYNC_FIM, Constantes.NOTIFICACAO_SYNC_FIM);
+                Electron.IpcMain.Send(window, Constantes.NOTIFICACAO_SYNC_FIM, Constantes.NOTIFICACAO_SYNC_FIM);
 
                 return new ResultadoSincronizarBoard
                 {
@@ -136,7 +136,7 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
                 await AtualizarUltimoSicronizar(EStatusSincronizar.ERRO);
                 #endregion
 
-                //Electron.IpcMain.Send(window, Constantes.NOTIFICACAO_SYNC_FIM, Constantes.NOTIFICACAO_SYNC_FIM);
+                Electron.IpcMain.Send(window, Constantes.NOTIFICACAO_SYNC_FIM, Constantes.NOTIFICACAO_SYNC_FIM);
 
                 return new ResultadoSincronizarBoard
                 {
@@ -283,7 +283,7 @@ namespace Back.Servico.Comandos.Board.SincronizarBoard
                 if (itemTask is null)
                 {
                     _logger.LogInformation($"Fluxo cadastrar {tipoTask} - {item.Id}");
-                    var ntipoTask = SincronizarHelper.RetornarTipoItem(tipoTask);
+                    var ntipoTask = SincronizarHelper.RetornarTipoItem(tipoTask, _configuration);
                     var novoItemTask = TratarObjeto(item, historiaId, conta);
                     resultado = await witClient.CreateWorkItemAsync(novoItemTask, Guid.Parse(_secundariaAzure.ProjetoId), ntipoTask, suppressNotifications: _notificarPorEmail);
 
